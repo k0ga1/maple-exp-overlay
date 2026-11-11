@@ -313,3 +313,17 @@ def bar_from_look(look, window_w, window_h):
     rects = bar_rects(look.layout, window_w, window_h, look.scale, shift)
     return BarLook(look.layout, look.mode, look.scale, rects[0][:2],
                    tuple(SlotSpot(s.index, s.rect, s.style) for s in look.slots))
+
+
+def slot_icon(crop):
+    """A quick-slot picture (BGR) made into an icon for the Potions card: the key label at the top cut off and the
+    count's digits (white with a dark outline, bottom left) painted over from around them."""
+    h, w = crop.shape[:2]
+    hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
+    v, s = hsv[..., 2].astype(int), hsv[..., 1].astype(int)
+    zone = np.zeros((h, w), bool)
+    zone[int(h * 0.5):, :int(w * 0.75)] = True
+    mask = (zone & (((v > 215) & (s < 40)) | ((v < 110) & (s < 120)))).astype(np.uint8) * 255
+    mask = cv2.dilate(mask, np.ones((2, 2), np.uint8))
+    out = cv2.inpaint(crop, mask, 3, cv2.INPAINT_TELEA)
+    return np.ascontiguousarray(out[int(h * 0.30):, int(w * 0.12):])

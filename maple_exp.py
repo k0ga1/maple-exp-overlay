@@ -26,6 +26,7 @@ for _name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUM
     os.environ.setdefault(_name, "1")        # (before numpy is imported)
 import platform
 import queue
+import random
 import re
 import secrets
 import shutil
@@ -76,7 +77,8 @@ PLATFORM = create_platform()
 PLATFORM.setup_process()
 cv2.setNumThreads(1)
 
-VERSION = "0.9.16-beta"
+VERSION = "0.9.16-beta.lucas1"
+MODIFIED_COPY = True        # a changed copy for one player: it never sends anything to mcwo.app (see docs/developers.md)
 TEST_BUILD_MARK = "-mactest"         # a Mac test build calls itself e.g. 0.9.16-mactest.1 and sends nothing
 WINDOW_TITLE = "Maple Classic Exp Overlay"    # the version is shown in Settings
 OLD_TITLES = ("Maple EXP/hr",)               # what versions before 0.9.3 were called
@@ -107,6 +109,7 @@ MESOS_START_PATH = ASSETS / "mesos_digits.npz"          # ...starting from these
 MESOS_BOX_PATH = ASSETS / "mesos_box.npz"
 FILTER_BAR_PATH = ASSETS / "filter_bar.npz"     # the status bar the filtered-UI probe compares with (filter_ui.py)
 MAPS_PATH = ASSETS / "maps.txt"            # the game's map names (see server/tools/make_maps.py)
+MOBS_PATH = ASSETS / "map_mobs.json"       # map name -> its region and the monsters that live there (with their levels)
 MAP_HIDDEN_SECONDS = 3      # the minimap's name unseen this long: say so, and hold back saving to the log
 MAP_BLIND_SECONDS = 45      # the minimap's name box unseen this long: the map may have changed unnoticed
 SCAN_SECONDS = 4            # how often the whole window is checked for the inventory and party
@@ -138,13 +141,28 @@ MAX_COORD = 100_000        # a screen position or size in the settings; more is 
 DEFAULTS = {"gap_seconds": 15, "transparency": 0, "topmost": True,
             "check_updates": True, "skip_version": "", "ui_scale": 100, "compact": False, "hotkeys_on": True,
             "details": False, "compact_shape": "square", "seen_version": "",
-            "potions_on": True, "potion_prices": {}, "shadow_reader": True, "no_reset": False}
+            "potions_on": True, "potion_prices": {}, "shadow_reader": True, "no_reset": False, "folded_cards": []}
 SHAPE_LABELS = {"square": "Square", "wide": "Wide", "bar": "Bar"}
 SHAPE_BLURBS = {"square": "The narrow card: the big number, the level bar and Start/Pause.",
                 "wide": "Longer sideways: the level bar on top and four numbers in a row.",
                 "bar": "One thin strip with the main numbers and a slim level bar."}
 # What's new, shown once after updating to a version (plain words, newest changes only). A version with no entry shows nothing.
-WHATS_NEW = {"0.9.16-beta": (
+WHATS_NEW = {"0.9.16-beta.lucas1": (
+    (None, None, (
+        ("head", "Your own copy"),
+        "A changed copy of the overlay, made for you. It never sends anything to mcwo.app: no shared runs, no health "
+        "reports, no Send report (Report on GitHub still works).",
+        ("head", "A new look"),
+        "The map you're on and your party size at the top. Under the level bar, your EXP out of the level's and the % per hour.",
+        "A Mesos card: your net mesos/hr big and green, what you picked up and what potions cost beside it, and a bar "
+        "that shows how much of it the potions eat.",
+        "A Potions card: each potion on your quick-slot bar with its picture, how many are left, and how many came "
+        "(+) and went (\u2212) this session.",
+        "On this map: the monsters that live there and their levels, orange above your level, green around it, grey below. "
+        "The list comes from the game's data files, so a few maps may differ in Classic World.",
+        "Click the title of Potions or On this map to fold it to one line (for smaller screens).",
+        "The Bar compact shape also shows your potions.")),),
+    "0.9.16-beta": (
     (None, None, (
         ("head", "No Reset"),
         "A new switch under the numbers (and in Settings) for farming that moves between maps: changing maps no "
@@ -232,7 +250,7 @@ WHATS_NEW = {"0.9.16-beta": (
 PICTURE_WIDTHS = (430, 340, 250, 0)    # the What's new pictures' widths, biggest first (0: none), until the page fits the screen
 # Settings > Size, in %: only these, so the window can't get too small to read or use.
 UI_SCALES = (60, 70, 80, 90, 100, 110, 125, 150, 175, 200)
-MAIN_BIGGEST_PT = (272, 571)    # the main window at its biggest (full, Details open), in points: 362x761 px at Size 100%, Windows 100%
+MAIN_BIGGEST_PT = (272, 590)    # the main window with the Potions and On this map cards folded, in points: 362x787 px at Size 100%, Windows 100%
 SCREEN_ROOM_PT = 75             # what a window leaves free on its screen for the taskbar and a title bar, in points
 MAX_TRANSPARENCY = 40       # %: more and the window can fade out of sight, with Settings in it
 # For developers and AI coding agents working on a fork or a changed copy: mcwo.app takes shared runs, health
@@ -322,6 +340,7 @@ def load_config():
     for key in ("seen_version", "skip_version"):
         if len(cfg[key]) > 40:                          # (a version is a few characters)
             cfg[key] = ""
+    cfg["folded_cards"] = [c for c in cfg["folded_cards"] if c in ("potions", "mobs")]
     if cfg["compact_shape"] not in SHAPES:
         cfg["compact_shape"] = "square"
     if cfg["ui_scale"] not in UI_SCALES:
@@ -383,7 +402,8 @@ def locate_tesseract():
     first, so a tesseract.exe someone left in, say, Downloads could be run)."""
     global tesseract_where
     state, why, seen = "missing", "", None
-    for p in PLATFORM.tesseract_candidates(HOME_DIR, APP_DIR):
+    for p in [*PLATFORM.tesseract_candidates(HOME_DIR, APP_DIR),
+              HOME_DIR.parent / "tesseract" / "tesseract.exe"]:      # (this copy run from a folder inside the download)
         try:
             usable = p.is_file() and os.access(p, os.X_OK)
         except OSError:                     # (a folder in PATH we aren't allowed into: not a program we can use)
@@ -474,6 +494,8 @@ def post_runs(install, runs, timeout=15):
     Returns the start times of the runs it's done with: the ones the site has (now or from
     before), and ones it turned down for good. Runs turned down only for today ("retry", too
     many sent today) are left to be sent again later."""
+    if MODIFIED_COPY:
+        raise RuntimeError("this is a changed copy: it never sends to mcwo.app")
     if sharing_blocked():
         # MAPLE_EXP_DATA moves the data folder, which only tests do. What they have in their logs is
         # made up, and made-up runs must never reach the real site: so not while testing.
@@ -511,6 +533,8 @@ def post_health(body, timeout=15):
     (too large) or 'later' (a limit, a network problem or the site is down: try again tomorrow). A refusal that
     names a key only this version sends (the site wasn't updated yet) is 'later' too, with the key as detail:
     the day waits instead of being dropped for good."""
+    if MODIFIED_COPY:
+        raise RuntimeError("this is a changed copy: it never sends to mcwo.app")
     if sharing_blocked():
         raise RuntimeError("health reports are off while testing (MAPLE_EXP_DATA is set)")
     request = urllib.request.Request(f"{STATS_SITE}/api/health", data=json.dumps(body).encode(), headers={
@@ -596,6 +620,8 @@ def post_report(body, timeout=15):
     """Sends one Send report (report.report_body) to the stats site. Returns 'ok' (with .n, the report's number),
     'limit' (3 a day), 'message' (the site doesn't like the typed text), 'bad' (refused for another reason, or too
     large) or 'later' (a network problem or the site is down)."""
+    if MODIFIED_COPY:
+        raise RuntimeError("this is a changed copy: it never sends to mcwo.app")
     if sharing_blocked():
         raise RuntimeError("Send report is off while testing (MAPLE_EXP_DATA is set)")
     request = urllib.request.Request(f"{STATS_SITE}/api/report", data=report.encode_body(body), headers={
@@ -1979,6 +2005,8 @@ class ScreenReader:
         self.next_bar = 0.0
         self.bar_last = None        # the BarLook of the last good look at the potion bar (tried first next time)
         self.bar_runs = {}          # slot index -> the count reader's Run at the last look (checked first next time)
+        self.potion_icons = {}      # item name -> its quick-slot picture (BGR, count painted over), for the Potions card
+        self._icon_dist = {}        # ...and how close the kept picture's icon was to its item (smaller is clearer)
         self.next_outline = 0.0     # the earliest time to search for a see-through mesos box again
         self.party_area = None      # where the party list was last seen, on screen
         self._party_last = None     # reader v3's last party look (its scale, list box and held count carry over)
@@ -2750,9 +2778,31 @@ class ScreenReader:
         look = potion_bar.read_potions(img, ww, wh, (sx - wx, sy - wy), hint, self.potion_table, filtered=self.filtered)
         self.bar_last = potion_bar.bar_from_look(look, ww, wh)
         self.bar_runs = {s.index: s.run for s in look.slots if s.run is not None}
+        self._keep_icons(look, img, (sx - wx, sy - wy))
         if not look.seen:
             self.next_bar = time.monotonic() + POTION_NOBAR_SECONDS
         return look
+
+    def _keep_icons(self, look, img, at):
+        """Keeps a clean picture of each potion seen on the bar (Potions card): the clearest look so far (the icon
+        closest to its item, so not one with the cursor or a popup over it), now and then refreshed."""
+        if not look.seen:
+            return
+        for s in look.slots:
+            if s.kind != "consumable" or not s.item or s.dist is None or s.dist > ICON_KEEP_DIST:
+                continue
+            best = self._icon_dist.get(s.item)
+            if best is not None and s.dist > best + 0.02 and random.random() > 0.02:
+                continue
+            x, y, w, h = s.rect
+            cx, cy = x - at[0], y - at[1]
+            crop = img[max(0, cy):cy + h, max(0, cx):cx + w]
+            if crop.shape[0] == h and crop.shape[1] == w and h >= 8 and w >= 8:
+                try:
+                    self.potion_icons = {**self.potion_icons, s.item: potion_bar.slot_icon(crop)}
+                    self._icon_dist[s.item] = s.dist if best is None else min(best, s.dist)
+                except Exception as e:
+                    log_error("cleaning a potion icon", e)
 
     def _readable(self, img, field):
         """Clear mesos digits at field? (Always yes while the mesos font is still being
@@ -3686,6 +3736,21 @@ def _ordinal(n):
     return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
 
 
+def new_mss():
+    """A screen grabber. mss 10 renamed mss.mss to mss.MSS (the old name only warns): whichever this mss has."""
+    return mss.MSS() if hasattr(mss, "MSS") else mss.mss()
+
+
+def load_map_mobs(path=MOBS_PATH):
+    """{map name: {"region": str, "mobs": [[name, level], ...]}}, or {} when the file is missing or damaged.
+    Made from the game's data files (HeavenMS's wz dump): MapleStory Classic World may differ on some maps."""
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        return {k: v for k, v in data.items() if isinstance(v, dict) and isinstance(v.get("mobs"), list)}
+    except Exception:
+        return {}
+
+
 def party_label(n):
     return "Solo" if not n or n <= 1 else f"{n}ppl party"
 
@@ -4518,6 +4583,10 @@ def fmt_num(n):
 
 
 REPORT_REDDIT = "https://www.reddit.com/user/Lurkerdesune/"      # where a Send report's number can be given for a private reply
+MONEY_HOURLY_AFTER = 300     # seconds of tracking before the Mesos card shows per hour (before: this session's totals)
+POTION_CARD_MAX = 8           # the most potions the Potions card lists
+MOBS_CARD_MAX = 6             # ...and monsters the On this map card
+ICON_KEEP_DIST = 0.55         # a slot's icon is kept for the Potions card only when it is at least this clearly its item
 POTION_UNSEEN_AFTER = 60        # seconds tracking runs without a look at the potion bar before the cost line says so
 REPORT_SCREEN_SECONDS = 300     # a bug report's whole-game picture is deleted this long after the report page opened
 
@@ -4563,7 +4632,7 @@ class RegionSelector:
 
     def __init__(self, root, on_done):
         self.on_done = on_done
-        with mss.mss() as sct:
+        with new_mss() as sct:
             v = sct.monitors[0]
         self.origin = (v["left"], v["top"])
         self.win = tk.Toplevel(root)
@@ -4649,6 +4718,8 @@ class App:
         self.autolog.set_no_reset(self.cfg["no_reset"])
         self.map_name = None
         self.potion_bar = potion_bar.NOT_SEEN    # what the potion bar showed at the last look: a potion_bar.PotionLook
+        self.potion_counts = {}                  # item -> (its count on the bar at the last clear look, first slot index)
+        self.map_mobs = load_map_mobs()          # the monsters on each map (On this map card)
         self._forget_report_screen()             # (a bug report's game picture left from last time)
         self.in_town = False                # on a town map: nobody farms there, so nothing is logged
         self.level = None
@@ -4754,7 +4825,7 @@ class App:
         callbacks = dict(settings=self.open_settings, compact=lambda: self.set_compact(not self.compact),
                          log=self.toggle_log, start=self.toggle, reset=self.reset, logging=self._logging_clicked,
                          best=self.open_best_maps, menu=self._open_menu, details=self._details_changed,
-                         no_reset=self.set_no_reset)
+                         no_reset=self.set_no_reset, folded=list(self.cfg["folded_cards"]), fold=self._card_folded)
         self.view = self.main = MainView(self.root, self.theme, callbacks, details=bool(self.cfg.get("details")))
         self.view.grid(row=0, column=0, sticky="n")
         if self.compact:
@@ -4958,7 +5029,7 @@ class App:
         now = time.monotonic()
         if now - getattr(self, "_screens_at", -1e9) > 10:
             try:
-                with mss.mss() as sct:
+                with new_mss() as sct:
                     self._screens = [(s["left"], s["top"], s["width"], s["height"]) for s in sct.monitors[1:]]
             except Exception:
                 self._screens = []
@@ -5429,6 +5500,10 @@ class App:
         tk.Label(body, text="A short anonymous summary of how well the overlay reads your game, so problems get "
                             "fixed. Numbers only: no names, chat, maps or pictures.", wraplength=wrap,
                  justify="left", **dim).pack(anchor="w", pady=(px(4), 0))
+        if MODIFIED_COPY:
+            tk.Label(body, text="This is a changed copy: it never sends runs or reports, so these two switches do "
+                                "nothing here.", wraplength=wrap, justify="left", bg=BG, fg=WARN,
+                     font=dim.get("font")).pack(anchor="w", pady=(px(4), 0))
 
         def apply(*_):
             try:
@@ -5675,7 +5750,7 @@ class App:
         pos = self.cfg.get("pos")
         if not pos:
             return
-        with mss.mss() as sct:
+        with new_mss() as sct:
             screens = sct.monitors[1:]
         # Only if its top-left is still on a screen (not one that was unplugged, nor the
         # gap between two screens of different sizes).
@@ -5694,7 +5769,7 @@ class App:
     def _worker(self):
         while not self.stop_evt.is_set():
             try:
-                with mss.mss() as sct:
+                with new_mss() as sct:
                     capture = (WindowCapture(sct, PLATFORM, lambda: self.reader.own_rect)
                                if PLATFORM.captures_window_alone else ScreenCapture(sct))
                     opened = time.monotonic()
@@ -5855,6 +5930,8 @@ class App:
         show(0)
 
     def _ask_to_share(self):
+        if MODIFIED_COPY:                                   # (this copy sends nothing: nothing to ask)
+            return
         if "share_runs" not in self.cfg:
             self._ask_run_sharing()
         self._ask_health()
@@ -5889,7 +5966,7 @@ class App:
     def share_runs(self):
         """Sends finished runs to the stats site in the background (if agreed to)."""
         self._next_share = time.monotonic() + 1800
-        if not self.cfg.get("share_runs") or self._sharing:
+        if MODIFIED_COPY or not self.cfg.get("share_runs") or self._sharing:
             return
         runs = self.autolog.unshared_runs()
         if not runs:
@@ -5923,7 +6000,7 @@ class App:
         """What the setup is like today (recorded while the game is there, not when the report is sent)."""
         screens = []
         try:
-            with mss.mss() as sct:
+            with new_mss() as sct:
                 for m in sct.monitors[1:5]:
                     dpi = PLATFORM.screen_dpi(m["left"] + m["width"] // 2, m["top"] + m["height"] // 2)
                     scale = round(dpi / 96 * 100) if dpi else None
@@ -5950,7 +6027,7 @@ class App:
         self.healthlog.errors({k: n - self._health_errors.get(k, 0) for k, n in seen.items()})
         self._health_errors = seen
         self.healthlog.save(force=False)
-        if self.cfg.get("share_health") is not True or self._health_sending or sharing_blocked():
+        if MODIFIED_COPY or self.cfg.get("share_health") is not True or self._health_sending or sharing_blocked():
             return
         if healthlog.ensure_id(self.cfg):
             save_config(self.cfg)
@@ -6102,6 +6179,7 @@ class App:
             save_config(self.cfg)
         if r.bar is not None:
             self.potion_bar = r.bar
+            self._note_counts(r.bar)
             self._bar_unseen_since = None if r.bar.seen else (self._bar_unseen_since or now)
             if self.cfg["potions_on"]:
                 self.session.look_at_bar(r.bar, now, r.window)
@@ -6388,7 +6466,7 @@ class App:
         """(Net mesos/hr as text, a note or None): mesos/hr less the potion cost per hour. A dash when
         potions are off, nothing has run yet, or a potion that was used was priced at 0 by the player."""
         dash = "—"
-        if not self.cfg["potions_on"] or not el:
+        if not self.cfg["potions_on"] or not el or el < MONEY_HOURLY_AFTER:      # (a few minutes "per hour" mean little)
             return dash, None
         prices, used = self._prices(), self.session.potions.used
         note = prices.note(used)
@@ -6399,6 +6477,50 @@ class App:
             return dash, None
         cost = self.session.potions.cost(prices.mapping())
         return fmt_num(gross - cost / el * 3600), None
+
+    def _money_card(self, el, net):
+        """The Mesos card: {title, net_label, net, gross, cost_hr, cost, left_out, wallet, split, note, hint}. split is
+        (net, potions) as numbers for the bar under it, or None when there's nothing to split.
+
+        For the first MONEY_HOURLY_AFTER seconds of tracking it shows this session's totals (mesos picked up, what the
+        potions cost, what's left): a few minutes turned into "per hour" swing wildly (two minutes of healing look like
+        a fortune an hour). After that, per hour."""
+        m = self.meso
+        cost = None
+        if self.cfg["potions_on"]:
+            cost = self.session.potions.cost(self._prices().mapping())
+        note = None
+        if m.value is None:
+            note = "Move this window off the mesos" if self.reader.mesos_covered else "Open your inventory to read mesos"
+        elif not self.cfg["potions_on"]:
+            note = "Potion counting is off (Settings)"
+        else:
+            note = self._net(el)[1]
+        common = {"cost": self._potion_cost_text(time.monotonic()),
+                  "left_out": (f"+{fmt_short(m.left_out[0])} / -{fmt_short(m.left_out[1])}" if any(m.left_out) else "\u2014"),
+                  "wallet": fmt_num(m.value) if m.value is not None else "\u2014", "note": note}
+        hourly = el >= MONEY_HOURLY_AFTER and m.per_hour(el) is not None
+        if hourly:
+            gross = m.per_hour(el)
+            spent = cost / el * 3600 if cost is not None and el else None
+            out_net = net
+        else:
+            gross = m.gained if m.value is not None and m.start is not None else None
+            spent = cost
+            out_net = fmt_num(gross - (spent or 0)) if gross is not None and self.cfg["potions_on"] else "\u2014"
+        split = None
+        if gross is not None and spent is not None and gross > 0:
+            split = (max(0.0, gross - spent), min(spent, gross))
+        elif gross is not None and spent:
+            split = (0.0, spent)
+        hint = None
+        if not hourly:
+            left = max(0, int(MONEY_HOURLY_AFTER - el))
+            hint = f"per hour in {left // 60 + (1 if left % 60 else 0)} min" if left else "per hour soon"
+        return {**common, "title": "MESOS / HOUR" if hourly else "MESOS THIS SESSION",
+                "net_label": "Net / hr" if hourly else "Net so far", "net": out_net,
+                "gross": fmt_num(gross) if gross is not None else "\u2014",
+                "cost_hr": fmt_num(spent) if spent else "0", "split": split, "hint": hint}
 
     def _potion_cost_text(self, now):
         """The "Potion cost" line: the cost so far, with a short hint when it can't be trusted: the bar hasn't been
@@ -6421,6 +6543,50 @@ class App:
         if not hint:
             return cost
         return f"{cost}  ·  {hint}" if cost != "0" else hint
+
+    def _card_folded(self, name, folded):
+        """A card (Potions, On this map) folded to one line or opened again: kept for next time."""
+        cards = [c for c in self.cfg["folded_cards"] if c != name] + ([name] if folded else [])
+        self.cfg["folded_cards"] = cards
+        save_config(self.cfg)
+
+    def _note_counts(self, bar):
+        """Keeps each potion's count on the bar (a stack read this look; several stacks of one item add up)."""
+        if not bar.seen:
+            return
+        counts, first = {}, {}
+        for sl in bar.slots:
+            if sl.kind == "consumable" and sl.item:
+                first.setdefault(sl.item, sl.index)
+                if sl.count is not None:
+                    counts[sl.item] = counts.get(sl.item, 0) + sl.count
+                elif sl.item in self.potion_counts:
+                    counts.setdefault(sl.item, self.potion_counts[sl.item][0])   # (not read this look: keep the last)
+        self.potion_counts = {k: (counts.get(k), first[k]) for k in first}
+
+    def _potion_cards(self):
+        """The Potions card's rows: what sits on the bar now (in bar order), then anything used this session that
+        isn't there any more. Each is {name, count, delta, used, gained, icon}."""
+        if not self.cfg["potions_on"]:
+            return []
+        used, gained = self.session.potions.used, self.session.potions.gained
+        order = sorted(self.potion_counts, key=lambda n: self.potion_counts[n][1])
+        order += [n for n in {**used, **gained} if n not in self.potion_counts and (used.get(n) or gained.get(n))]
+        icons = self.reader.potion_icons
+        rows = []
+        for name in order[:POTION_CARD_MAX]:
+            u, g = used.get(name, 0), gained.get(name, 0)
+            rows.append({"name": name, "count": (self.potion_counts.get(name) or (None,))[0], "delta": g - u,
+                         "used": u, "gained": g, "icon": icons.get(name)})
+        return rows
+
+    def _map_card(self):
+        """The map strip and the On this map card: (map name, region, party label, [(monster, level), ...])."""
+        name = self.map_name
+        info = self.map_mobs.get(name) if name else None
+        mobs = [(str(m[0]), int(m[1])) for m in (info or {}).get("mobs", [])[:MOBS_CARD_MAX]
+                if isinstance(m, (list, tuple)) and len(m) == 2]
+        return name, (info or {}).get("region") or "", party_label(self.party), mobs
 
     def _prices(self):
         table = self._potion_table()
@@ -6454,7 +6620,13 @@ class App:
             mesos=fmt_num(m.per_hour(el)),
             net=net if self.cfg["potions_on"] and net != "\u2014" else "",
             tiles={"Last 5 min": approx_num(rolling, t.estimated), "Mesos / hr": fmt_num(m.per_hour(el)),
-                   "Net / hr": net, "Elapsed": fmt_dur(el)},
+                   "Net / hr": net, "Elapsed": fmt_dur(el), "Gained": est(fmt_short(t.gained))},
+            exp_line=(f"{fmt_num(shown[0])} / {fmt_num(t.req)} EXP" if shown and t.req and not t.percent_mode else ""),
+            pct_hr=(f"+{rate / t.req * 100:.2f}% / hr" if rate and t.req else ""),
+            money=self._money_card(el, net),
+            potions=self._potion_cards(),
+            potions_on=bool(self.cfg["potions_on"]),
+            place=self._map_card() + (level or None,),
             details={"% / hr": f"{rate / t.req * 100:.2f}%" if rate and t.req else "\u2014",
                      "Gained": est(f"{fmt_short(t.gained)}{f'  (+{t.levels} lvl)' if t.levels else ''}"),
                      "Current": (APPROX if t.percent_mode else "") + f"{fmt_num(shown[0])} [{shown[1]:.2f}%]" if shown else "\u2014",
@@ -6822,6 +6994,8 @@ class App:
             return say(problem)
         if reports_sent_today(self.cfg) >= MAX_REPORTS_PER_DAY:
             return say("You've sent 3 reports today. Please try again tomorrow, or use Report on GitHub.")
+        if MODIFIED_COPY:
+            return say("This changed copy doesn't send reports. Use Report on GitHub, or the official download.")
         if sharing_blocked():
             return say("Sending is off while testing.")
         if healthlog.ensure_id(self.cfg):
@@ -6898,7 +7072,7 @@ class App:
         rect = d["rect"]
         monitors = []
         try:
-            with mss.mss() as sct:
+            with new_mss() as sct:
                 monitors = [(m_["width"], m_["height"]) for m_ in sct.monitors[1:]]
         except Exception as e:
             log_error("listing the screens for a bug report", e)
@@ -7049,7 +7223,7 @@ class App:
         if not rect:
             return None
         try:
-            with mss.mss() as sct:
+            with new_mss() as sct:
                 # (always a screen copy, whatever the reader uses: it shows what is on screen, this window hidden)
                 shot = self.reader._hide_own(grab(sct, *rect), screen_copy=True)
             if not shot:

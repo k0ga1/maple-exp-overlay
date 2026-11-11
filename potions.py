@@ -181,6 +181,7 @@ MAX_STEP = 10               # a drop in one look bigger than this must be seen t
 DRINK_RATE = 4              # the most one stack can lose in a second (measured: 2.4 spamming a key, 2.75 holding it)
 RATE_SECONDS = (1.0, 60.0)  # a drop is judged over the time since the stack's last count: a look's worth at least, a minute at most
 LOOK_GAP = 60               # no look at all for this long: tracking was cut short (game closed, computer asleep)
+MAX_GAIN = 100              # a rise bigger than this in one look isn't counted as picked up (a misread, a move, a shop)
 
 
 def allowed_drop(seconds):
@@ -192,13 +193,15 @@ def allowed_drop(seconds):
 class Stack:
     """One potion stack: its item, its count at the last look that counted it (and when that was), and the
     slot it sits in for each layout it has been seen in (none while it is out of sight)."""
-    __slots__ = ("item", "count", "seen", "at", "pending", "last_use")
+    __slots__ = ("item", "count", "seen", "at", "pending", "last_use", "last_gain", "hidden_from")
 
     def __init__(self, item, count, seen):
         self.item, self.count, self.seen = item, count, seen
         self.at = {}                          # layout -> slot index
         self.pending = None                   # a big drop waiting to be seen a second time
         self.last_use = None                  # (count after, count before) of the use at the last look
+        self.last_gain = None                 # (count after, count before) of the rise at the last look
+        self.hidden_from = None               # the count before its last digits were hidden: rising back to it is no gain
 
 
 class PotionTracker:
@@ -218,6 +221,7 @@ class PotionTracker:
 
     def reset(self):
         self.used = {}                        # item name -> how many used since tracking began
+        self.gained = {}                      # item name -> how many came in (picked up) since tracking began
         self.pause()
 
     def pause(self):
@@ -291,13 +295,18 @@ class PotionTracker:
         stack.at[layout] = index
 
     def _count(self, stack, count, counting, now):
-        before, undo = stack.count, stack.last_use
-        stack.last_use = None
+        before, undo, gain_undo = stack.count, stack.last_use, stack.last_gain
+        stack.last_use = stack.last_gain = None
         if count < before and str(before).startswith(str(count)):
             # "224" read as "22" or "2": the mouse cursor or a popup hides the last digits (a drink that really ends
             # on such a count, 13 -> 1, is lost too: accepted); never a use, the count starts over from here
             stack.count, stack.seen, stack.pending = count, now, None
+            stack.hidden_from = max(before, stack.hidden_from or 0)
             return
+        if counting and count < before and gain_undo == (before, count):
+            # back down to the count before a rise: that rise isn't kept as picked up (a misread, or one picked up and
+            # one drunk: either way nothing came in). The drop is judged as a use just as before.
+            self.gained[stack.item] -= before - count
         if counting and count < before:
             drop = before - count
             if drop <= allowed_drop(now - stack.seen):      # (more than drinking explains: it just starts over)
@@ -308,6 +317,14 @@ class PotionTracker:
                 stack.last_use = (count, before)            # (undone if the next look is `before` again)
         elif counting and undo == (before, count):          # back to the count before a use: that was a misread
             self.used[stack.item] -= count - before
+        elif counting and count > before:
+            # a rise is no use; up to MAX_GAIN at a look counts as picked up (not back up to digits that were only hidden)
+            gain = count - max(before, stack.hidden_from or 0)
+            if 0 < gain <= MAX_GAIN:
+                self.gained[stack.item] = self.gained.get(stack.item, 0) + gain
+                stack.last_gain = (count, before)
+        if count >= (stack.hidden_from or 0) or count < before:
+            stack.hidden_from = None
         stack.count, stack.seen, stack.pending = count, now, None
 
 

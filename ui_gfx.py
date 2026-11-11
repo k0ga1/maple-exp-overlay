@@ -260,6 +260,10 @@ class Gfx:
                     d.ellipse((x * u - 1.7 * u, 12 * u - 1.7 * u, x * u + 1.7 * u, 12 * u + 1.7 * u), fill=255)
             elif name == "link":
                 line((8, 16), (16, 8)); line((9, 8), (16, 8), (16, 15))
+            elif name == "map":
+                d.polygon([(3 * u, 6 * u), (9 * u, 3.5 * u), (15 * u, 6 * u), (21 * u, 3.5 * u), (21 * u, 18 * u),
+                           (15 * u, 20.5 * u), (9 * u, 18 * u), (3 * u, 20.5 * u)], outline=255, width=lw)
+                line((9, 4), (9, 18)); line((15, 6), (15, 20))
             elif name in ("down", "up"):
                 y0, y1 = (9, 15) if name == "down" else (15, 9)
                 line((6, y0), (12, y1), (18, y0))
@@ -269,6 +273,58 @@ class Gfx:
             return img
         return self.cached(("icon", name, size, color), make)
 
+
+    def split_bar(self, w, h, parts, colors, gap=2):
+        """One rounded bar cut into coloured parts by their sizes (the Mesos card: net, potions)."""
+        def make():
+            W, H, G = w * SS, h * SS, gap * SS
+            img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            d = ImageDraw.Draw(img)
+            total = sum(parts) or 1
+            mask = Image.new("L", (W, H), 0)
+            ImageDraw.Draw(mask).rounded_rectangle((0, 0, W - 1, H - 1), H / 2, fill=255)
+            x = 0.0
+            shown = [(p, c) for p, c in zip(parts, colors) if p > 0]
+            for i, (p, c) in enumerate(shown):
+                pw = (W - G * (len(shown) - 1)) * p / total
+                d.rectangle((x, 0, x + pw, H), fill=rgb(c) + (255,))
+                x += pw + G
+            if not shown:
+                d.rectangle((0, 0, W, H), fill=rgb("#222733") + (255,))
+            img.putalpha(Image.fromarray(np.minimum(np.asarray(img.getchannel("A")), np.asarray(mask))))
+            return img.resize((w, h), Image.LANCZOS)
+        return self.cached(("split", w, h, tuple(round(p / (sum(parts) or 1), 3) for p in parts), tuple(colors), gap), make)
+
+    def slot_tile(self, size, icon_bgr=None, radius=9):
+        """A potion's tile on the Potions card: the game's light quick-slot plate with its icon (a picture taken
+        from the bar, pixel art kept sharp), or an empty dark tile when there's no picture yet."""
+        if icon_bgr is None:
+            return self.panel(size, size, radius, "#232733", "#1c1f28", 0.10)
+        h0, w0 = icon_bgr.shape[:2]
+        k = min(size / w0, size / h0)
+        icon = Image.fromarray(np.ascontiguousarray(icon_bgr[..., ::-1])).convert("RGBA")
+        icon = icon.resize((max(1, round(w0 * k)), max(1, round(h0 * k))), Image.NEAREST if k >= 1.5 else Image.LANCZOS)
+        tile = Image.new("RGBA", (size, size), rgb("#e6e8ec") + (255,))
+        tile.alpha_composite(icon, ((size - icon.width) // 2, (size - icon.height) // 2))
+        mask = Image.new("L", (size * SS, size * SS), 0)
+        ImageDraw.Draw(mask).rounded_rectangle((0, 0, size * SS - 1, size * SS - 1), radius * self.s * SS, fill=255)
+        tile.putalpha(mask.resize((size, size), Image.LANCZOS))
+        return tile
+
+    def mob_badge(self, size, color):
+        """A small round monster face for the On this map card, tinted by how hard the monster is for you."""
+        def make():
+            W = size * SS
+            img = Image.new("RGBA", (W, W), (0, 0, 0, 0))
+            d = ImageDraw.Draw(img)
+            d.rounded_rectangle((0, 0, W - 1, W - 1), W * 0.3, fill=rgb("#1d2029") + (255,))
+            m = W * 0.2
+            d.ellipse((m, m * 1.25, W - m, W - m * 0.75), fill=rgb(color) + (255,))
+            e = W * 0.07
+            for cx in (W * 0.4, W * 0.6):
+                d.ellipse((cx - e, W * 0.52 - e, cx + e, W * 0.52 + e), fill=rgb("#0b0c10") + (255,))
+            return img.resize((size, size), Image.LANCZOS)
+        return self.cached(("mob", size, color), make)
 
     def slider(self, w, h, frac, focused=False):
         """A slider: a thin track filled with gold up to a round knob."""

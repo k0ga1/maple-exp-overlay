@@ -1,0 +1,3286 @@
+{
+"The Swamp of Despair III": {
+"region": "Warning Street",
+"mobs": [
+[
+"Jr. Necki",
+21
+],
+[
+"Ligator",
+32
+]
+]
+},
+"Swampy Land in a Deep Forest": {
+"region": "Dungeon",
+"mobs": [
+[
+"Evil Eye",
+27
+]
+]
+},
+"Henesys Hunting Ground II": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Pig",
+7
+],
+[
+"Orange Mushroom",
+8
+],
+[
+"Ribbon Pig",
+10
+],
+[
+"Green Mushroom",
+15
+]
+]
+},
+"The Burnt Land IV": {
+"region": "Warning Street",
+"mobs": [
+[
+"Iron Hog",
+42
+],
+[
+"Iron Boar",
+45
+]
+]
+},
+"Sleepy Dungeon V": {
+"region": "Dungeon",
+"mobs": [
+[
+"Stone Golem",
+55
+],
+[
+"Dark Stone Golem",
+58
+]
+]
+},
+"Right Around Lith Harbor": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Snail",
+1
+],
+[
+"Blue Snail",
+2
+]
+]
+},
+"1st Accompaniment <1st Stage>": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Ligator (PC)",
+32
+]
+]
+},
+"The Tree That Grew II": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Slime",
+6
+],
+[
+"Dark Stump",
+10
+]
+]
+},
+"Transfer Area": {
+"region": "Kerning City Subway",
+"mobs": [
+[
+"Stirge",
+20
+]
+]
+},
+"Deep Valley II": {
+"region": "Warning Street",
+"mobs": [
+[
+"Axe Stump",
+17
+],
+[
+"Ghost Stump",
+19
+]
+]
+},
+"Mushroom Garden": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Shroom",
+2
+],
+[
+"Orange Mushroom",
+8
+],
+[
+"Green Mushroom",
+15
+]
+]
+},
+"Ant Tunnel For Bowman": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Evil Eye 2",
+35
+],
+[
+"Zombie Mushroom 2",
+35
+]
+]
+},
+"Downstairs at the Forest": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Lupin",
+37
+]
+]
+},
+"Deep Valley I": {
+"region": "Warning Street",
+"mobs": [
+[
+"Axe Stump",
+17
+],
+[
+"Ghost Stump",
+19
+]
+]
+},
+"Monkey Swamp I": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Jr. Necki",
+21
+],
+[
+"Lupin",
+37
+]
+]
+},
+"The Cave of Evil Eye III": {
+"region": "Dungeon",
+"mobs": [
+[
+"Evil Eye",
+27
+],
+[
+"Jr. Boogie 2",
+35
+]
+]
+},
+"Rocky Road III": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Dark Stump",
+10
+]
+]
+},
+"West Rocky Mountain I": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Stump",
+4
+],
+[
+"Dark Stump",
+10
+]
+]
+},
+"Tree Dungeon, Forest Up North V": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Bubbling",
+15
+]
+]
+},
+"The Forest of Wisdom": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Slime",
+6
+]
+]
+},
+"A Look-Out Shed Around the Beach": {
+"region": "Florina Road",
+"mobs": [
+[
+"Lorang",
+37
+],
+[
+"Lupin",
+37
+]
+]
+},
+"1st Accompaniment <Last Stage>": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Jr. Necki (PC)",
+21
+],
+[
+"Curse Eye (PC)",
+35
+],
+[
+"King Slime",
+40
+]
+]
+},
+"The Tree That Grew III": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Dark Stump",
+10
+],
+[
+"Green Mushroom",
+15
+]
+]
+},
+"Thicket Around the Beach III": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Blue Snail",
+2
+],
+[
+"Red Snail",
+4
+]
+]
+},
+"Forest West of Henesys": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Slime",
+6
+],
+[
+"Pig",
+7
+],
+[
+"Orange Mushroom",
+8
+]
+]
+},
+"East Domain of Perion": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Stump",
+4
+],
+[
+"Dark Stump",
+10
+]
+]
+},
+"Tree Dungeon, Forest Up North VI": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Axe Stump",
+17
+]
+]
+},
+"The Rain-Forest East of Henesys": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Pig",
+7
+],
+[
+"Orange Mushroom",
+8
+]
+]
+},
+"Damp Tree-Forest": {
+"region": "Dungeon",
+"mobs": [
+[
+"Horny Mushroom",
+22
+],
+[
+"Dark Axe Stump",
+22
+],
+[
+"Zombie Mushroom",
+24
+]
+]
+},
+"Tree Dungeon, Forest Up North I": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Slime",
+6
+]
+]
+},
+"The Forest East of Henesys": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Pig",
+7
+],
+[
+"Orange Mushroom",
+8
+],
+[
+"Ribbon Pig",
+10
+]
+]
+},
+"West Rocky Mountain IV": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Dark Axe Stump",
+22
+],
+[
+"Zombie Mushroom",
+24
+]
+]
+},
+"Dangerous Croko II": {
+"region": "Warning Street",
+"mobs": [
+[
+"Jr. Necki",
+21
+],
+[
+"Croco",
+52
+]
+]
+},
+"The Swamp of Despair I": {
+"region": "Warning Street",
+"mobs": [
+[
+"Jr. Necki",
+21
+],
+[
+"Ligator",
+32
+]
+]
+},
+"East Rocky Mountain III": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Dark Stump",
+10
+],
+[
+"Axe Stump",
+17
+]
+]
+},
+"The Grave of Mushmom": {
+"region": "Dungeon",
+"mobs": [
+[
+"Zombie Mushroom",
+24
+],
+[
+"Jr. Boogie 2",
+35
+],
+[
+"Zombie Mushmom",
+65
+]
+]
+},
+"Tree Dungeon, Forest Up North III": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Octopus",
+12
+],
+[
+"Fairy 3",
+30
+]
+]
+},
+"Sunset Sky": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Red Snail",
+4
+],
+[
+"Slime",
+6
+],
+[
+"Orange Mushroom",
+8
+]
+]
+},
+"A Hill West of Henesys": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Red Snail",
+4
+],
+[
+"Slime",
+6
+],
+[
+"Pig",
+7
+]
+]
+},
+"Sanctuary Entrance II": {
+"region": "Dungeon",
+"mobs": [
+[
+"Cold Eye",
+40
+],
+[
+"Tauromacis",
+70
+]
+]
+},
+"Line 1 <Area 4>": {
+"region": "Kerning City Subway",
+"mobs": [
+[
+"Wraith",
+48
+],
+[
+"Shade",
+56
+]
+]
+},
+"The Cave of Evil Eye IV": {
+"region": "Dungeon",
+"mobs": [
+[
+"Evil Eye",
+27
+],
+[
+"Jr. Boogie 2",
+35
+]
+]
+},
+"Thief's Construction Site": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Blue Mushroom 2",
+35
+],
+[
+"Cold Eye 2",
+35
+]
+]
+},
+"Another Path": {
+"region": "Dungeon",
+"mobs": [
+[
+"Cold Eye",
+40
+]
+]
+},
+"Line 1 <Area 3>": {
+"region": "Kerning City Subway",
+"mobs": [
+[
+"Stirge",
+20
+],
+[
+"Jr. Wraith",
+35
+],
+[
+"Wraith",
+48
+]
+]
+},
+"The Field Up North of Ellinia": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Red Snail",
+4
+],
+[
+"Slime",
+6
+]
+]
+},
+"Tree Dungeon, Monkey Forest II": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Zombie Lupin",
+40
+]
+]
+},
+"Pig Park": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Green Mushroom",
+15
+],
+[
+"Blue Mushroom",
+20
+]
+]
+},
+"Line 1 <Area 1>": {
+"region": "Kerning City Subway",
+"mobs": [
+[
+"Bubbling",
+15
+]
+]
+},
+"Sanctuary Entrance IV": {
+"region": "Dungeon",
+"mobs": [
+[
+"Cold Eye",
+40
+],
+[
+"Tauromacis",
+70
+],
+[
+"Taurospear",
+75
+]
+]
+},
+"The Burnt Land III": {
+"region": "Warning Street",
+"mobs": [
+[
+"Iron Hog",
+42
+],
+[
+"Iron Boar",
+45
+]
+]
+},
+"An Empty House": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Orange Mushroom",
+8
+],
+[
+"Green Mushroom",
+15
+]
+]
+},
+"The Forest South of Ellinia": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Slime",
+6
+],
+[
+"Dark Stump",
+10
+]
+]
+},
+"Dark Cave": {
+"region": "Dungeon",
+"mobs": [
+[
+"Stirge",
+20
+],
+[
+"Horny Mushroom",
+22
+],
+[
+"Zombie Mushroom",
+24
+]
+]
+},
+"The Pig Beach": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Pig",
+7
+],
+[
+"Ribbon Pig",
+10
+],
+[
+"Iron Hook",
+42
+]
+]
+},
+"Line 2 <Area 1>": {
+"region": "Kerning City Subway",
+"mobs": [
+[
+"Jr. Necki",
+21
+],
+[
+"Jr. Wraith",
+35
+]
+]
+},
+"1st Accompaniment <Bonus>": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Green Mushroom",
+15
+],
+[
+"Horny Mushroom",
+22
+]
+]
+},
+"East Rocky Mountain VII": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Wild Boar",
+25
+]
+]
+},
+"Line 1 <Area 2>": {
+"region": "Kerning City Subway",
+"mobs": [
+[
+"Stirge",
+20
+],
+[
+"Jr. Wraith",
+35
+]
+]
+},
+"Monkey Swamp III": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Jr. Necki",
+21
+],
+[
+"Zombie Lupin",
+40
+]
+]
+},
+"The Burnt Land V": {
+"region": "Warning Street",
+"mobs": [
+[
+"Iron Boar",
+45
+]
+]
+},
+"Sanctuary Entrance I": {
+"region": "Dungeon",
+"mobs": [
+[
+"Cold Eye",
+40
+],
+[
+"Tauromacis",
+70
+]
+]
+},
+"The Forest of Evil I": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Zombie Lupin",
+40
+],
+[
+"Malady",
+55
+]
+]
+},
+"Tree Dungeon, Forest Up North II": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Dark Stump",
+10
+]
+]
+},
+"Dungeon, Southern Forest IV": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Bubbling",
+15
+]
+]
+},
+"The Tunnel That Lost Light I": {
+"region": "Dungeon",
+"mobs": [
+[
+"Copper Drake",
+45
+],
+[
+"Drake",
+50
+]
+]
+},
+"Hunting Ground in the Deep Forest I": {
+"region": "Dungeon",
+"mobs": [
+[
+"Evil Eye",
+27
+],
+[
+"Curse Eye",
+35
+]
+]
+},
+"Hunting Ground in the Deep Forest II": {
+"region": "Dungeon",
+"mobs": [
+[
+"Curse Eye",
+35
+]
+]
+},
+"L Forest III": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Orange Mushroom",
+8
+],
+[
+"Ribbon Pig",
+10
+]
+]
+},
+"Dungeon, Southern Forest II": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Slime",
+6
+]
+]
+},
+"Thicket Around the Beach I": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Snail",
+1
+],
+[
+"Blue Snail",
+2
+],
+[
+"Red Snail",
+4
+]
+]
+},
+"West Rocky Mountain III": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Axe Stump",
+17
+],
+[
+"Dark Axe Stump",
+22
+]
+]
+},
+"Deep Ant Tunnel I": {
+"region": "Dungeon",
+"mobs": [
+[
+"Horny Mushroom",
+22
+],
+[
+"Zombie Mushroom",
+24
+],
+[
+"Evil Eye",
+27
+],
+[
+"Jr. Boogie 2",
+35
+]
+]
+},
+"Magician's Tree Dungeon": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Horned Mushroom 2",
+35
+],
+[
+"Curse Eye 2",
+35
+]
+]
+},
+"Pig Park II": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Blue Mushroom",
+20
+],
+[
+"Horny Mushroom",
+22
+]
+]
+},
+"Tree Dungeon, Forest Up North IV": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Green Mushroom",
+15
+],
+[
+"Fairy 3",
+30
+]
+]
+},
+"The Forest of Evil II": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Zombie Lupin",
+40
+],
+[
+"Malady",
+55
+]
+]
+},
+"The Burnt Land II": {
+"region": "Warning Street",
+"mobs": [
+[
+"Fire Boar",
+32
+],
+[
+"Iron Hook",
+42
+]
+]
+},
+"Another Sanctuary": {
+"region": "Premium Road",
+"mobs": [
+[
+"Slime",
+6
+],
+[
+"Blue Mushroom",
+20
+]
+]
+},
+"Kerning City Middle Forest I": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Ribbon Pig",
+10
+],
+[
+"Octopus",
+12
+],
+[
+"Green Mushroom",
+15
+]
+]
+},
+"Monkey Forest I": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Lupin",
+37
+],
+[
+"Zombie Lupin",
+40
+]
+]
+},
+"B1 <Subway Depot>": {
+"region": "Line 3 Construction Site",
+"mobs": [
+[
+"Bubbling",
+15
+]
+]
+},
+"East Rocky Mountain V": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Axe Stump",
+17
+],
+[
+"Dark Axe Stump",
+22
+]
+]
+},
+"Someone Else's House": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Horny Mushroom",
+22
+],
+[
+"Fairy 2",
+30
+],
+[
+"Mushmom",
+60
+]
+]
+},
+"The Forest North of Ellinia": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Slime",
+6
+],
+[
+"Dark Stump",
+10
+]
+]
+},
+"Deep Forest": {
+"region": "Dungeon",
+"mobs": [
+[
+"Dark Axe Stump",
+22
+],
+[
+"Horny Mushroom",
+22
+],
+[
+"Zombie Mushroom",
+24
+]
+]
+},
+"Hot Sand": {
+"region": "Florina Road",
+"mobs": [
+[
+"Tortie",
+46
+],
+[
+"Clang",
+48
+]
+]
+},
+"Monkey Swamp II": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Jr. Necki",
+21
+],
+[
+"Lupin",
+37
+],
+[
+"Zombie Lupin",
+40
+]
+]
+},
+"Golem's Temple IV": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Fairy 4",
+30
+],
+[
+"Mixed Golem",
+59
+]
+]
+},
+"East Rocky Mountain II": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Stump",
+4
+],
+[
+"Dark Stump",
+10
+]
+]
+},
+"Warrior's Rocky Mountain": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Fire Boar 2",
+35
+],
+[
+"Lupin 2",
+35
+]
+]
+},
+"Golem's Temple I": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Fairy 4",
+30
+],
+[
+"Stone Golem",
+55
+],
+[
+"Dark Stone Golem",
+58
+]
+]
+},
+"Perion Street Corner": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Blue Snail",
+2
+],
+[
+"Stump",
+4
+],
+[
+"Red Snail",
+4
+]
+]
+},
+"Deep Ant Tunnel II": {
+"region": "Dungeon",
+"mobs": [
+[
+"Horny Mushroom",
+22
+],
+[
+"Zombie Mushroom",
+24
+],
+[
+"Evil Eye",
+27
+]
+]
+},
+"L Forest I": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Slime",
+6
+],
+[
+"Pig",
+7
+],
+[
+"Orange Mushroom",
+8
+]
+]
+},
+"Monkey Forest II": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Lupin",
+37
+],
+[
+"Zombie Lupin",
+40
+]
+]
+},
+"Deep Valley III": {
+"region": "Warning Street",
+"mobs": [
+[
+"Ghost Stump",
+19
+],
+[
+"Dark Axe Stump",
+22
+]
+]
+},
+"East Rocky Mountain I": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Stump",
+4
+],
+[
+"Red Snail",
+4
+]
+]
+},
+"East Rocky Mountain IV": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Axe Stump",
+17
+],
+[
+"Dark Axe Stump",
+22
+]
+]
+},
+"The Land of Wild Boar II": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Dark Axe Stump",
+22
+],
+[
+"Wild Boar",
+25
+]
+]
+},
+"Golem's Temple II": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Fairy 4",
+30
+],
+[
+"Dark Stone Golem",
+58
+]
+]
+},
+"Construction Site North of Kerning City": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Slime",
+6
+],
+[
+"Orange Mushroom",
+8
+],
+[
+"Octopus",
+12
+]
+]
+},
+"Northern Top of Construction Site": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Octopus",
+12
+],
+[
+"Bubbling",
+15
+]
+]
+},
+"Ant Tunnel Park": {
+"region": "Dungeon",
+"mobs": [
+[
+"Horny Mushroom",
+22
+],
+[
+"Zombie Mushroom",
+24
+],
+[
+"Evil Eye",
+27
+]
+]
+},
+"Drake Hunting Ground": {
+"region": "Dungeon",
+"mobs": [
+[
+"Jr. Boogie 2",
+35
+],
+[
+"Copper Drake",
+45
+],
+[
+"Drake",
+50
+]
+]
+},
+"Rocky Road I": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Stump",
+4
+],
+[
+"Dark Stump",
+10
+]
+]
+},
+"Caution Falling Down": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Octopus",
+12
+],
+[
+"Bubbling",
+15
+]
+]
+},
+"Tree Dungeon, Monkey Forest I": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Lupin",
+37
+]
+]
+},
+"Line 2 <Area 3>": {
+"region": "Kerning City Subway",
+"mobs": [
+[
+"Wraith",
+48
+],
+[
+"Shade",
+56
+]
+]
+},
+"Dangerous Steam": {
+"region": "Dungeon",
+"mobs": [
+[
+"Stirge",
+20
+],
+[
+"Horny Mushroom",
+22
+],
+[
+"Zombie Mushroom",
+24
+]
+]
+},
+"Perion Dungeon Entrance": {
+"region": "Warning Street",
+"mobs": [
+[
+"Dark Axe Stump",
+22
+],
+[
+"Horny Mushroom",
+22
+]
+]
+},
+"The Swamp of Despair II": {
+"region": "Warning Street",
+"mobs": [
+[
+"Jr. Necki",
+21
+],
+[
+"Ligator",
+32
+]
+]
+},
+"The Cave of Evil Eye I": {
+"region": "Dungeon",
+"mobs": [
+[
+"Evil Eye",
+27
+],
+[
+"Jr. Boogie 2",
+35
+]
+]
+},
+"Sleepy Dungeon III": {
+"region": "Dungeon",
+"mobs": [
+[
+"Cold Eye",
+40
+]
+]
+},
+"Sanctuary Entrance III": {
+"region": "Dungeon",
+"mobs": [
+[
+"Cold Eye",
+40
+],
+[
+"Tauromacis",
+70
+],
+[
+"Taurospear",
+75
+]
+]
+},
+"Golem's Temple III": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Fairy 4",
+30
+],
+[
+"Dark Stone Golem",
+58
+],
+[
+"Mixed Golem",
+59
+]
+]
+},
+"Tree Dungeon, Forest Up North IX": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Curse Eye",
+35
+]
+]
+},
+"The Entrance of Golem's Temple": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Fairy 4",
+30
+],
+[
+"Stone Golem",
+55
+]
+]
+},
+"Rocky Road II": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Stump",
+4
+],
+[
+"Dark Stump",
+10
+]
+]
+},
+"The Cave of Evil Eye II": {
+"region": "Dungeon",
+"mobs": [
+[
+"Evil Eye",
+27
+],
+[
+"Jr. Boogie 2",
+35
+]
+]
+},
+"Ant Tunnel IV": {
+"region": "Dungeon",
+"mobs": [
+[
+"Horny Mushroom",
+22
+],
+[
+"Annoyed Zombie Mushroom",
+24
+],
+[
+"Zombie Mushroom",
+24
+]
+]
+},
+"Kerning City Middle Forest II": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Green Mushroom",
+15
+],
+[
+"Bubbling",
+15
+]
+]
+},
+"East Rocky Mountain VI": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Dark Axe Stump",
+22
+],
+[
+"Wild Boar",
+25
+]
+]
+},
+"Lorang Lorang Lorang": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Lorang",
+37
+]
+]
+},
+"Henesys Dungeon Entrance": {
+"region": "Warning Street",
+"mobs": [
+[
+"Blue Mushroom",
+20
+],
+[
+"Horny Mushroom",
+22
+],
+[
+"Zombie Mushroom",
+24
+]
+]
+},
+"West Domain of Perion": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Dark Stump",
+10
+]
+]
+},
+"Lorang and Clang": {
+"region": "Florina Road",
+"mobs": [
+[
+"Lorang",
+37
+],
+[
+"Clang",
+48
+]
+]
+},
+"Ant Tunnel III": {
+"region": "Dungeon",
+"mobs": [
+[
+"Horny Mushroom",
+22
+],
+[
+"Zombie Mushroom",
+24
+],
+[
+"Annoyed Zombie Mushroom",
+24
+]
+]
+},
+"West Street Corner of Perion": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Stump",
+4
+],
+[
+"Red Snail",
+4
+],
+[
+"Dark Stump",
+10
+]
+]
+},
+"Kerning City Construction Site": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Red Snail",
+4
+],
+[
+"Slime",
+6
+],
+[
+"Orange Mushroom",
+8
+],
+[
+"Octopus",
+12
+]
+]
+},
+"Thicket Around the Beach II": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Blue Snail",
+2
+],
+[
+"Red Snail",
+4
+]
+]
+},
+"Henesys Hunting Ground III": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Orange Mushroom",
+8
+],
+[
+"Ribbon Pig",
+10
+],
+[
+"Green Mushroom",
+15
+]
+]
+},
+"West Rocky Mountain II": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Green Mushroom",
+15
+],
+[
+"Axe Stump",
+17
+]
+]
+},
+"Dungeon, Southern Forest III": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Dejected Green Mushroom",
+15
+],
+[
+"Green Mushroom",
+15
+]
+]
+},
+"B3 <Subway Depot>": {
+"region": "Line 3 Construction Site",
+"mobs": [
+[
+"Jr. Boogie 1",
+35
+],
+[
+"Jr. Boogie 2",
+35
+],
+[
+"Wraith",
+48
+]
+]
+},
+"Over the Wall": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Stump",
+4
+],
+[
+"Dark Stump",
+10
+],
+[
+"Axe Stump",
+17
+],
+[
+"Dark Axe Stump",
+22
+]
+]
+},
+"Dangerous Valley": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Wild Boar",
+25
+],
+[
+"Fire Boar",
+32
+]
+]
+},
+"Line 2 <Area 2>": {
+"region": "Kerning City Subway",
+"mobs": [
+[
+"Jr. Necki",
+21
+],
+[
+"Jr. Wraith",
+35
+],
+[
+"Wraith",
+48
+]
+]
+},
+"Sleepy Dungeon IV": {
+"region": "Dungeon",
+"mobs": [
+[
+"Stone Golem",
+55
+],
+[
+"Dark Stone Golem",
+58
+]
+]
+},
+"Dangerous Valley II": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Fire Boar",
+32
+]
+]
+},
+"Ant Tunnel II": {
+"region": "Dungeon",
+"mobs": [
+[
+"Horny Mushroom",
+22
+],
+[
+"Zombie Mushroom",
+24
+],
+[
+"Annoyed Zombie Mushroom",
+24
+]
+]
+},
+"Lorang Lorang": {
+"region": "Florina Road",
+"mobs": [
+[
+"Lorang",
+37
+],
+[
+"Lupin",
+37
+]
+]
+},
+"The Cursed Sanctuary": {
+"region": "Dungeon",
+"mobs": [
+[
+"Jr. Balrog",
+80
+]
+]
+},
+"The Blue Mushroom Forest": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Blue Mushroom",
+20
+],
+[
+"Horny Mushroom",
+22
+]
+]
+},
+"3-Way Road-Split": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Red Snail",
+4
+],
+[
+"Pig",
+7
+],
+[
+"Orange Mushroom",
+8
+]
+]
+},
+"Clang and Lorang": {
+"region": "Florina Road",
+"mobs": [
+[
+"Lorang",
+37
+],
+[
+"Tortie",
+46
+],
+[
+"Clang",
+48
+]
+]
+},
+"Tree Dungeon, Forest Up North VII": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Horny Mushroom",
+22
+]
+]
+},
+"The Field South of Ellinia": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Stump",
+4
+],
+[
+"Slime",
+6
+],
+[
+"Green Mushroom",
+15
+]
+]
+},
+"Kerning City Middle Forest III": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Blue Mushroom",
+20
+],
+[
+"Horny Mushroom",
+22
+]
+]
+},
+"Sleepy Dungeon I": {
+"region": "Dungeon",
+"mobs": [
+[
+"Lupin",
+37
+]
+]
+},
+"Damp Forest": {
+"region": "Dungeon",
+"mobs": [
+[
+"Horny Mushroom",
+22
+],
+[
+"Zombie Mushroom",
+24
+]
+]
+},
+"The Tunnel That Lost Light II": {
+"region": "Dungeon",
+"mobs": [
+[
+"Drake",
+50
+],
+[
+"Red Drake",
+60
+]
+]
+},
+"L Forest II": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Orange Mushroom",
+8
+],
+[
+"Ribbon Pig",
+10
+]
+]
+},
+"Drake's Meal Table": {
+"region": "Dungeon",
+"mobs": [
+[
+"Bob",
+2
+],
+[
+"Red Drake",
+60
+],
+[
+"Wild Kargo",
+62
+]
+]
+},
+"Land of Wild Boar": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Dark Axe Stump",
+22
+],
+[
+"Wild Boar",
+25
+],
+[
+"Jr. Boogie 2",
+35
+],
+[
+"Jr. Boogie 1",
+35
+]
+]
+},
+"Beach Hunting Ground": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Pig",
+7
+],
+[
+"Ribbon Pig",
+10
+]
+]
+},
+"The Road to the Dungeon": {
+"region": "Warning Street",
+"mobs": [
+[
+"Blue Mushroom",
+20
+],
+[
+"Horny Mushroom",
+22
+]
+]
+},
+"Dungeon, Southern Forest I": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Slime",
+6
+]
+]
+},
+"The Hill East of Henesys": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Blue Snail",
+2
+],
+[
+"Shroom",
+2
+],
+[
+"Red Snail",
+4
+],
+[
+"Pig",
+7
+],
+[
+"Cynical Orange Mushroom",
+8
+]
+]
+},
+"Dangerous Croko I": {
+"region": "Warning Street",
+"mobs": [
+[
+"Jr. Necki",
+21
+],
+[
+"Ligator",
+32
+],
+[
+"Croco",
+52
+]
+]
+},
+"B2 <Subway Depot>": {
+"region": "Line 3 Construction Site",
+"mobs": [
+[
+"Jr. Wraith",
+35
+],
+[
+"Jr. Boogie 1",
+35
+]
+]
+},
+"Sleepy Dungeon II": {
+"region": "Dungeon",
+"mobs": [
+[
+"Zombie Lupin",
+40
+]
+]
+},
+"The Burnt Land I": {
+"region": "Warning Street",
+"mobs": [
+[
+"Wild Boar",
+25
+],
+[
+"Fire Boar",
+32
+]
+]
+},
+"Ant Tunnel I": {
+"region": "Dungeon",
+"mobs": [
+[
+"Horny Mushroom",
+22
+],
+[
+"Zombie Mushroom",
+24
+],
+[
+"Annoyed Zombie Mushroom",
+24
+]
+]
+},
+"The Tree That Grew I": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Red Snail",
+4
+],
+[
+"Slime",
+6
+]
+]
+},
+"The Breathing Rock": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Blue Mushroom",
+20
+],
+[
+"Fairy 4",
+30
+],
+[
+"Stone Golem",
+55
+]
+]
+},
+"Henesys Hunting Ground I": {
+"region": "Victoria Road",
+"mobs": [
+[
+"Shroom",
+2
+],
+[
+"Blue Snail",
+2
+],
+[
+"Red Snail",
+4
+],
+[
+"Pig",
+7
+]
+]
+},
+"Sharp Cliff II": {
+"region": "El Nath",
+"mobs": [
+[
+"Dark Jr. Yeti",
+56
+],
+[
+"Transforming Dark Jr. Yeti",
+56
+],
+[
+"Dark Pepe",
+64
+],
+[
+"Dark Yeti",
+68
+]
+]
+},
+"Orbis Tower <12th Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Ice Sentinel",
+30
+],
+[
+"Fire Sentinel",
+30
+]
+]
+},
+"Cloud Park III": {
+"region": "Orbis",
+"mobs": [
+[
+"Fairy 1",
+30
+],
+[
+"Star Pixie",
+35
+],
+[
+"Lunar Pixie",
+45
+]
+]
+},
+"Orbis Tower <13th Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Ice Sentinel",
+30
+]
+]
+},
+"Ice Valley I": {
+"region": "El Nath",
+"mobs": [
+[
+"Jr. Yeti",
+50
+],
+[
+"Transforming Jr. Yeti",
+50
+],
+[
+"White Fang",
+58
+],
+[
+"Yeti",
+65
+]
+]
+},
+"Garden of Red II": {
+"region": "Orbis",
+"mobs": [
+[
+"Cellion",
+53
+]
+]
+},
+"Forest of Dead Trees IV": {
+"region": "El Nath",
+"mobs": [
+[
+"Coolie Zombie",
+57
+],
+[
+"Riche",
+74
+]
+]
+},
+"Strolling Path": {
+"region": "Orbis",
+"mobs": [
+[
+"Fairy 2",
+30
+],
+[
+"Star Pixie",
+35
+],
+[
+"Nependeath",
+42
+],
+[
+"Lunar Pixie",
+45
+]
+]
+},
+"Cloud Park VI": {
+"region": "Orbis",
+"mobs": [
+[
+"Fairy 1",
+30
+],
+[
+"Lunar Pixie",
+45
+],
+[
+"Luster Pixie",
+52
+]
+]
+},
+"Dead Mine II": {
+"region": "El Nath",
+"mobs": [
+[
+"Flyeye",
+41
+],
+[
+"Miner Zombie",
+57
+]
+]
+},
+"Orbis Tower <5th Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Leatty",
+32
+],
+[
+"Dark Leatty",
+33
+]
+]
+},
+"Snowy Hill": {
+"region": "El Nath",
+"mobs": [
+[
+"Leatty",
+32
+],
+[
+"Jr. Pepe",
+35
+]
+]
+},
+"Wolf Territory V": {
+"region": "El Nath",
+"mobs": [
+[
+"White Fang",
+58
+],
+[
+"Lycanthrope",
+80
+]
+]
+},
+"Orbis Tower <14th Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Sentinel",
+30
+]
+]
+},
+"Forest of Dead Trees I": {
+"region": "El Nath",
+"mobs": [
+[
+"Coolie Zombie",
+57
+],
+[
+"Riche",
+74
+]
+]
+},
+"Ice Valley II": {
+"region": "El Nath",
+"mobs": [
+[
+"Yeti",
+65
+],
+[
+"Yeti and Pepe",
+78
+]
+]
+},
+"Garden of Red I": {
+"region": "Orbis",
+"mobs": [
+[
+"Jr. Cellion",
+33
+]
+]
+},
+"Cloud Park I": {
+"region": "Orbis",
+"mobs": [
+[
+"Star Pixie",
+35
+]
+]
+},
+"Cloud Park IV": {
+"region": "Orbis",
+"mobs": [
+[
+"Fairy 1",
+30
+],
+[
+"Star Pixie",
+35
+],
+[
+"Lunar Pixie",
+45
+]
+]
+},
+"Sharp Cliff I": {
+"region": "El Nath",
+"mobs": [
+[
+"Jr. Yeti",
+50
+],
+[
+"Transforming Jr. Yeti",
+50
+],
+[
+"Transforming Dark Jr. Yeti",
+56
+],
+[
+"Dark Jr. Yeti",
+56
+],
+[
+"Dark Yeti",
+68
+]
+]
+},
+"Orbis Tower <11th Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Fire Sentinel",
+30
+]
+]
+},
+"Garden of Yellow I": {
+"region": "Orbis",
+"mobs": [
+[
+"Jr. Lioner",
+33
+]
+]
+},
+"Orbis Tower <7th Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Leatty",
+32
+]
+]
+},
+"Wolf Territory II": {
+"region": "El Nath",
+"mobs": [
+[
+"Hector",
+55
+],
+[
+"White Fang",
+58
+],
+[
+"Werewolf",
+75
+]
+]
+},
+"Garden of Green I": {
+"region": "Orbis",
+"mobs": [
+[
+"Jr. Grupin",
+33
+]
+]
+},
+"Orbis Tower <15th Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Sentinel",
+30
+]
+]
+},
+"Cloud Park II": {
+"region": "Orbis",
+"mobs": [
+[
+"Fairy 1",
+30
+],
+[
+"Star Pixie",
+35
+],
+[
+"Lunar Pixie",
+45
+]
+]
+},
+"Garden of Yellow II": {
+"region": "Orbis",
+"mobs": [
+[
+"Lioner",
+53
+]
+]
+},
+"The Cave of Trial II": {
+"region": "El Nath",
+"mobs": [
+[
+"Jr. Cerebes",
+43
+],
+[
+"Cerebes",
+72
+]
+]
+},
+"Orbis Tower <10th Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Fire Sentinel",
+30
+],
+[
+"Ice Sentinel",
+30
+]
+]
+},
+"Stairway to the Sky I": {
+"region": "Orbis",
+"mobs": [
+[
+"Lioner",
+53
+],
+[
+"Cellion",
+53
+],
+[
+"Grupin",
+53
+]
+]
+},
+"Icy Cold Field": {
+"region": "El Nath",
+"mobs": [
+[
+"Hector",
+55
+],
+[
+"White Fang",
+58
+],
+[
+"Snow Witch",
+64
+]
+]
+},
+"Stairway to the Sky II": {
+"region": "Orbis",
+"mobs": [
+[
+"Lucida",
+73
+]
+]
+},
+"Garden of Green II": {
+"region": "Orbis",
+"mobs": [
+[
+"Grupin",
+53
+]
+]
+},
+"Strolling Path II": {
+"region": "Orbis",
+"mobs": [
+[
+"Star Pixie",
+35
+],
+[
+"Lunar Pixie",
+45
+],
+[
+"Dark Nependeath",
+47
+]
+]
+},
+"The Road to Garden of 3 Colors": {
+"region": "Orbis",
+"mobs": [
+[
+"Jr. Grupin",
+33
+],
+[
+"Jr. Cellion",
+33
+],
+[
+"Jr. Lioner",
+33
+]
+]
+},
+"Wolf Territory I": {
+"region": "El Nath",
+"mobs": [
+[
+"Hector",
+55
+],
+[
+"White Fang",
+58
+],
+[
+"Werewolf",
+75
+]
+]
+},
+"Wolf Territory III": {
+"region": "El Nath",
+"mobs": [
+[
+"White Fang",
+58
+],
+[
+"Lycanthrope",
+80
+]
+]
+},
+"Orbis Tower <4th Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Dark Leatty",
+33
+]
+]
+},
+"Cold Field I": {
+"region": "El Nath",
+"mobs": [
+[
+"Hector",
+55
+],
+[
+"White Fang",
+58
+]
+]
+},
+"Dead Mine I": {
+"region": "El Nath",
+"mobs": [
+[
+"Flyeye",
+41
+],
+[
+"Miner Zombie",
+57
+]
+]
+},
+"The Cave of Trial I": {
+"region": "El Nath",
+"mobs": [
+[
+"Jr. Cerebes",
+43
+],
+[
+"Firebomb",
+51
+],
+[
+"Cerebes",
+72
+]
+]
+},
+"Watch Out for Icy Path II": {
+"region": "El Nath",
+"mobs": [
+[
+"Jr. Yeti",
+50
+],
+[
+"Transforming Jr. Yeti",
+50
+],
+[
+"Hector",
+55
+],
+[
+"Snow Witch",
+64
+]
+]
+},
+"Orbis Tower <6th Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Leatty",
+32
+]
+]
+},
+"Forest of Dead Trees III": {
+"region": "El Nath",
+"mobs": [
+[
+"Coolie Zombie",
+57
+],
+[
+"Riche",
+74
+]
+]
+},
+"Wolf Territory IV": {
+"region": "El Nath",
+"mobs": [
+[
+"White Fang",
+58
+],
+[
+"Lycanthrope",
+80
+]
+]
+},
+"Orbis Tower <1st Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Jr. Pepe",
+35
+]
+]
+},
+"Cave Within the Cave": {
+"region": "Hidden Street",
+"mobs": [
+[
+"Jr. Cerebes",
+43
+]
+]
+},
+"Watch Out for Icy Path I": {
+"region": "El Nath",
+"mobs": [
+[
+"Jr. Yeti",
+50
+],
+[
+"Hector",
+55
+],
+[
+"Snow Witch",
+64
+]
+]
+},
+"Dead Mine III": {
+"region": "El Nath",
+"mobs": [
+[
+"Flyeye",
+41
+],
+[
+"Miner Zombie",
+57
+]
+]
+},
+"Dangerous Cliff": {
+"region": "El Nath",
+"mobs": [
+[
+"Transforming Dark Jr. Yeti",
+56
+],
+[
+"Dark Jr. Yeti",
+56
+],
+[
+"Dark Yeti",
+68
+],
+[
+"Dark Yeti and Pepe",
+82
+]
+]
+},
+"The Passage": {
+"region": "El Nath",
+"mobs": [
+[
+"Flyeye",
+41
+]
+]
+},
+"Garden of Darkness I": {
+"region": "Orbis",
+"mobs": [
+[
+"Lucida",
+73
+]
+]
+},
+"Cloud Park V": {
+"region": "Orbis",
+"mobs": [
+[
+"Fairy 2",
+30
+],
+[
+"Lunar Pixie",
+45
+],
+[
+"Luster Pixie",
+52
+]
+]
+},
+"The Crown-Flyer": {
+"region": "Hidden Street",
+"mobs": [
+[
+"White Fang",
+58
+],
+[
+"Pepe",
+60
+]
+]
+},
+"Garden of Darkness II": {
+"region": "Orbis",
+"mobs": [
+[
+"Lucida",
+73
+]
+]
+},
+"Orbis Tower <8th Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Jr. Sentinel",
+23
+],
+[
+"Ice Sentinel",
+30
+]
+]
+},
+"Disposed Flower Garden": {
+"region": "Orbis",
+"mobs": [
+[
+"Nependeath",
+42
+],
+[
+"Dark Nependeath",
+47
+]
+]
+},
+"Orbis Tower <2nd Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Dark Leatty",
+33
+],
+[
+"Jr. Pepe",
+35
+]
+]
+},
+"The Cave of Trial III": {
+"region": "El Nath",
+"mobs": [
+[
+"Jr. Cerebes",
+43
+],
+[
+"Firebomb",
+51
+],
+[
+"Cerebes",
+72
+],
+[
+"Bain",
+90
+]
+]
+},
+"Orbis Tower <3rd Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Dark Leatty",
+33
+]
+]
+},
+"Cold Field II": {
+"region": "El Nath",
+"mobs": [
+[
+"Hector",
+55
+],
+[
+"White Fang",
+58
+]
+]
+},
+"Forest of Dead Trees II": {
+"region": "El Nath",
+"mobs": [
+[
+"Coolie Zombie",
+57
+],
+[
+"Riche",
+74
+]
+]
+},
+"Dead Mine IV": {
+"region": "El Nath",
+"mobs": [
+[
+"Flyeye",
+41
+],
+[
+"Miner Zombie",
+57
+]
+]
+},
+"Orbis Tower <9th Floor>": {
+"region": "Orbis",
+"mobs": [
+[
+"Jr. Sentinel",
+23
+],
+[
+"Fire Sentinel",
+30
+]
+]
+},
+"Snail Hunting Ground III": {
+"region": "Maple Road",
+"mobs": [
+[
+"Snail",
+1
+],
+[
+"Blue Snail",
+2
+]
+]
+},
+"Snail Garden": {
+"region": "Rainbow Street",
+"mobs": [
+[
+"Snail",
+1
+],
+[
+"Blue Snail",
+2
+],
+[
+"Red Snail",
+4
+]
+]
+},
+"Hunting Ground Middle of the Forest II": {
+"region": "Rainbow Street",
+"mobs": [
+[
+"Shroom",
+2
+],
+[
+"Blue Snail",
+2
+],
+[
+"Red Snail",
+4
+],
+[
+"Orange Mushroom",
+8
+]
+]
+},
+"In a Small Forest": {
+"region": "Maple Road",
+"mobs": [
+[
+"Tutorial Jr. Sentinel",
+1
+]
+]
+},
+"Snail Field of Flowers": {
+"region": "Rainbow Street",
+"mobs": [
+[
+"Snail",
+1
+],
+[
+"Blue Snail",
+2
+],
+[
+"Red Snail",
+4
+],
+[
+"Stump",
+4
+],
+[
+"Slime",
+6
+]
+]
+},
+"Snail Hunting Ground II": {
+"region": "Maple Road",
+"mobs": [
+[
+"Snail",
+1
+],
+[
+"Blue Snail",
+2
+]
+]
+},
+"Hunting Ground Middle of the Forest I": {
+"region": "Rainbow Street",
+"mobs": [
+[
+"Blue Snail",
+2
+],
+[
+"Red Snail",
+4
+],
+[
+"Slime",
+6
+]
+]
+},
+"Tomato Field": {
+"region": "Rainbow Street",
+"mobs": [
+[
+"Snail",
+1
+],
+[
+"Blue Snail",
+2
+],
+[
+"Red Snail",
+4
+]
+]
+}
+}

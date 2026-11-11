@@ -1,0 +1,33 @@
+Maple Classic Exp Overlay - versao do Lucas (0.9.16-beta.lucas1)
+=================================================================
+
+Esta e uma copia modificada do overlay, rodando direto do codigo.
+O .exe oficial continua na pasta de cima, intacto.
+
+O QUE MUDOU
+- Visual novo: mapa e party no topo, EXP atual / EXP do nivel e % por hora,
+  card de Mesos com o liquido em destaque (pegos - pocoes), card das pocoes
+  da barra de atalhos (icone, quantidade, + pegas / - usadas na sessao) e
+  card "On this map" com os monstros do mapa e seus niveis.
+- Clique no titulo de "Quick slot potions" ou "On this map" para recolher o card
+  numa linha (bom para telas menores). A escolha fica salva.
+- O modo compacto "Bar" tambem mostra as pocoes.
+- Esta copia NAO envia nada para o mcwo.app (runs, health reports, Send report).
+
+COMO RODAR (primeira vez)
+1. Instale o Python 3.12 ou 3.13 de https://www.python.org/downloads/
+   Na instalacao, marque "Add python.exe to PATH".
+2. De dois cliques em instalar.bat (baixa os pacotes; so precisa uma vez).
+3. Feche o overlay oficial, se estiver aberto (so um pode rodar por vez).
+4. De dois cliques em "Abrir Overlay.pyw" (abre sem a janela preta).
+   (run.bat tambem funciona.)
+
+DEPOIS
+- E so dar dois cliques em "Abrir Overlay.pyw".
+  Dica: botao direito > Enviar para > Area de trabalho (criar atalho).
+- Configuracoes e log sao os mesmos do oficial (%APPDATA%\MapleEXP).
+- Para voltar ao oficial, abra o .exe da pasta de cima.
+- A lista de monstros vem dos arquivos de dados do jogo (GMS antigo);
+  alguns mapas do Classic World podem ser diferentes ou nao ter lista.
+- Os icones das pocoes aparecem depois que o overlay ve a barra de atalhos
+  (alguns segundos depois de comecar).

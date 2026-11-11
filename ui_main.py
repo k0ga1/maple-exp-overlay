@@ -14,10 +14,12 @@ SIDE = 16
 INNER = W - 2 * SIDE
 # The compact shapes (see Strip): Square is the narrow card (the Hero in a smaller window); Wide and Bar are sideways.
 SHAPES = ("square", "wide", "bar")
-SHAPE_W = {"square": W, "wide": 560, "bar": 720}
+SHAPE_W = {"square": W, "wide": 560, "bar": 960}
 
 # state -> (dot colour, glows)
-STRIP_KEYS = ("rate", "pct", "level", "eta", "eta_time", "mesos", "net", "tiles", "state", "state_text", "message", "no_reset")
+STRIP_KEYS = ("rate", "pct", "level", "eta", "eta_time", "mesos", "net", "tiles", "state", "state_text", "message", "no_reset",
+              "pots")
+BAR_POTS = 4                              # the most potions the Bar shape shows (icon and count)
 NO_RESET_GOLD = "#b89a4e"                 # the dim gold "No Reset" word in the Bar shape (it has no status pill)
 STATES = {"waiting": ("#6c7280", False), "ready": ("#ffcf4a", False), "tracking": ("#5fe39a", True),
           "paused": ("#ffb27a", False), "alert": ("#ff7a5c", True)}
@@ -257,12 +259,14 @@ class Hero(tk.Canvas):
         self._barimg = self.create_image(0, 0, anchor="nw")
         self._eta = self.create_text(0, 0, anchor="nw", text="", fill="#e9c15a", font=theme.font("bold", 13))
         self._pct = self.create_text(0, 0, anchor="ne", text="", fill=TEXT_DIM, font=theme.font("semibold", 12))
+        self._expl = self.create_text(0, 0, anchor="nw", text="", fill=TEXT_DIM, font=theme.font("semibold", 10.5))
+        self._pcth = self.create_text(0, 0, anchor="ne", text="", fill=TEXT_DIM, font=theme.font("semibold", 10.5))
         # compact mode has no tiles, so mesos/hr sits under the number (value, then its unit)
         self._mval = self.create_text(0, 0, anchor="nw", text="", fill=TEXT, font=theme.font("bold", 12), state="hidden")
         self._munit = self.create_text(0, 0, anchor="nw", text="mesos / hr", fill=TEXT_DIM, font=theme.font("semibold", 10), state="hidden")
         self._nval = self.create_text(0, 0, anchor="nw", text="", fill=STATES["tracking"][0], font=theme.font("bold", 12), state="hidden")
         self._photos, self._chip_text = {}, None
-        self._m = dict(rate=None, delta=None, spark=(), pct=None, eta="", chip=None, mesos="", net="")
+        self._m = dict(rate=None, delta=None, spark=(), pct=None, eta="", chip=None, mesos="", net="", exp_line="", pct_hr="")
         self._layout()
         self.redraw(everything=True)
 
@@ -286,7 +290,7 @@ class Hero(tk.Canvas):
             self.itemconfigure(item, state="hidden")
 
     def _height(self):
-        return 158 if self.compact else 196
+        return 158 if self.compact else 214
 
     def _layout(self):
         g = self.t.gfx
@@ -299,6 +303,10 @@ class Hero(tk.Canvas):
         self.coords(self._barimg, g.px(18), g.px(self._bar_y) - g.px(6))
         self.coords(self._eta, g.px(18), g.px(self._bar_y + 16))
         self.coords(self._pct, g.px(INNER - 18), g.px(self._bar_y + 16))
+        self.coords(self._expl, g.px(18), g.px(self._bar_y + 37))
+        self.coords(self._pcth, g.px(INNER - 18), g.px(self._bar_y + 37))
+        for item in (self._expl, self._pcth):
+            self.itemconfigure(item, state="hidden" if self.compact else "normal")
         self.coords(self._spark, g.px(8), g.px(96))
 
     def set_compact(self, on):
@@ -344,6 +352,9 @@ class Hero(tk.Canvas):
             self.itemconfigure(self._pct, text=f"{m['pct']:.1f}%" if m["pct"] is not None else "")
         if every or "eta" in changed:
             self.itemconfigure(self._eta, text=m["eta"])
+        if every or "exp_line" in changed or "pct_hr" in changed:
+            self.itemconfigure(self._expl, text=m["exp_line"])
+            self.itemconfigure(self._pcth, text=m["pct_hr"])
         if every or "delta" in changed or "rate" in changed:
             d = m["delta"]
             if d is None or not m["rate"]:
@@ -435,6 +446,303 @@ class Details(tk.Canvas):
         return value + "…"
 
 
+GREEN, RED, WARN_TXT = "#5fd38a", "#ff8f75", "#ffb27a"
+DASH = "\u2014"
+
+
+def _cut(font, text, room):
+    """`text` cut with an ellipsis to fit `room` pixels in `font`."""
+    if font.measure(text) <= room:
+        return text
+    while text and font.measure(text + "\u2026") > room:
+        text = text[:-1]
+    return text + "\u2026"
+
+
+class PlaceCard(tk.Canvas):
+    """The map strip: where you are (region and map name, as the game spells them) and your party size."""
+
+    H = 54
+
+    def __init__(self, parent, theme, bg=INK):
+        self.t = theme
+        g = theme.gfx
+        super().__init__(parent, width=g.px(INNER), height=g.px(self.H), bg=bg, highlightthickness=0, bd=0)
+        self._photos = [g.photo(g.panel(g.px(INNER), g.px(self.H), 14, "#191c25", "#13151b", 0.09)),
+                        g.photo(g.icon("map", g.px(20), "#ffcc33"))]
+        self.create_image(0, 0, anchor="nw", image=self._photos[0])
+        self.create_image(g.px(14), g.px(self.H / 2), anchor="w", image=self._photos[1])
+        self._region = self.create_text(g.px(44), g.px(17), anchor="w", text="", fill=TEXT_DIM, font=theme.font("semibold", 10))
+        self._name = self.create_text(g.px(44), g.px(35), anchor="w", text="", fill=TEXT, font=theme.font("bold", 14))
+        self._chip = self.create_image(g.px(INNER - 12), g.px(self.H / 2), anchor="e")
+        self._chip_t = self.create_text(0, g.px(self.H / 2), anchor="center", text="", fill="#c9ccd3", font=theme.font("bold", 11))
+        self._last = None
+
+    def set(self, name, region, party):
+        if (name, region, party) == self._last:
+            return
+        self._last = (name, region, party)
+        g = self.t.gfx
+        cw = self.t.font("bold", 11).measure(party) + g.px(18)
+        self._photos[2:] = [g.photo(g.panel(cw, g.px(24), 8, "#262a35", "#20242e", 0.08))]
+        self.itemconfigure(self._chip, image=self._photos[2])
+        self.itemconfigure(self._chip_t, text=party)
+        self.coords(self._chip_t, g.px(INNER - 12) - cw / 2, g.px(self.H / 2))
+        room = g.px(INNER - 44 - 20) - cw
+        if name:
+            self.itemconfigure(self._region, text=_cut(self.t.font("semibold", 10), region or "Map", room))
+            self.itemconfigure(self._name, text=_cut(self.t.font("bold", 14), name, room), fill=TEXT)
+        else:
+            self.itemconfigure(self._region, text="Map")
+            self.itemconfigure(self._name, text="Not read yet", fill=TEXT_DIM)
+
+
+class MoneyCard(tk.Canvas):
+    """Mesos per hour: the net (what you really make) big and green, what you picked up and what the potions
+    cost beside it, a bar that shows how much of it the potions eat, and the session's totals under it."""
+
+    H = 136
+
+    def __init__(self, parent, theme, bg=INK):
+        self.t = theme
+        g = theme.gfx
+        super().__init__(parent, width=g.px(INNER), height=g.px(self.H), bg=bg, highlightthickness=0, bd=0)
+        self._photos = {"bg": g.photo(g.panel(g.px(INNER), g.px(self.H), 16, "#191c25", "#13151b", 0.09))}
+        self.create_image(0, 0, anchor="nw", image=self._photos["bg"])
+        R = g.px(INNER - 16)
+        self._title = self.create_text(g.px(16), g.px(18), anchor="w", text="MESOS / HOUR", fill=TEXT_DIM, font=theme.font("semibold", 10))
+        self._wallet = self.create_text(R, g.px(18), anchor="e", text="", fill=TEXT_DIM, font=theme.font("semibold", 10))
+        self._net_label = self.create_text(g.px(16), g.px(40), anchor="w", text="Net", fill=TEXT_DIM, font=theme.font("semibold", 10))
+        self._net = self.create_text(g.px(15), g.px(62), anchor="w", text="\u2014", fill=GREEN, font=theme.font("extra", 26))
+        self._gross = self.create_text(R, g.px(46), anchor="e", text="", fill=TEXT, font=theme.font("bold", 12))
+        self._cost = self.create_text(R, g.px(68), anchor="e", text="", fill=RED, font=theme.font("bold", 12))
+        self._bar = self.create_image(g.px(16), g.px(92), anchor="nw")
+        self._left = self.create_text(g.px(16), g.px(118), anchor="w", text="", fill=TEXT_DIM, font=theme.font("semibold", 10))
+        self._right = self.create_text(R, g.px(118), anchor="e", text="", fill=TEXT_DIM, font=theme.font("semibold", 10))
+        self._last = None
+
+    def set(self, d):
+        key = tuple(sorted((k, v) for k, v in d.items() if k != "split")) + (d.get("split") and tuple(round(x) for x in d["split"]),)
+        if key == self._last:
+            return
+        self._last = key
+        g, f = self.t.gfx, self.t.font
+        self.itemconfigure(self._wallet, text=f"Wallet {d['wallet']}" if d.get("wallet") not in (None, "\u2014") else "")
+        self.itemconfigure(self._title, text=d.get("title") or "MESOS / HOUR")
+        self.itemconfigure(self._net_label, text=d.get("net_label") or "Net")
+        net = d.get("net") or "\u2014"
+        negative = net.startswith("-")
+        if negative:
+            net = "\u2212" + net[1:]
+        self.itemconfigure(self._net, text=net, fill=TEXT_FAINT if net == "\u2014" else RED if negative else GREEN)
+        self.itemconfigure(self._gross, text=f"{d.get('gross', DASH)}  picked up")
+        cost_hr = d.get("cost_hr") or "0"
+        minus = "" if cost_hr == "0" else "\u2212"
+        self.itemconfigure(self._cost, text=f"{minus}{cost_hr}  potions",
+                           fill=TEXT_DIM if cost_hr == "0" else RED)
+        split = d.get("split")
+        w = g.px(INNER - 32)
+        parts = split if split else (0, 0)
+        self._photos["bar"] = g.photo(g.split_bar(w, g.px(8), parts, (GREEN, "#ff7a5c")))
+        self.itemconfigure(self._bar, image=self._photos["bar"])
+        half = g.px((INNER - 40) / 2)
+        if d.get("note"):
+            self.itemconfigure(self._left, text=_cut(f("semibold", 10), d["note"], g.px(INNER - 32)), fill=WARN_TXT)
+            self.itemconfigure(self._right, text="")
+        else:
+            cost = d.get("cost") or "0"
+            left = d["hint"] if d.get("hint") else f"Potions so far {cost}"
+            self.itemconfigure(self._left, text=_cut(f("semibold", 10), left, half), fill=TEXT_DIM)
+            self.itemconfigure(self._right, text=_cut(f("semibold", 10), f"Left out {d.get('left_out', DASH)}", half))
+
+
+class Foldable:
+    """A card whose title row folds it to one line (a summary) and back: click the title. `on_fold(name, folded)`
+    is told, so the choice can be kept."""
+
+    TITLE_H = 36
+
+    def _setup_fold(self, name, folded, on_fold):
+        g = self.t.gfx
+        self.fold_name, self.folded, self.on_fold = name, folded, on_fold
+        self._chev = self.create_image(g.px(INNER - 14), g.px(18), anchor="e")
+        self._summary = self.create_text(g.px(INNER - 36), g.px(18), anchor="e", text="", fill=TEXT_DIM, font=self.t.font("semibold", 10))
+        self.bind("<Button-1>", self._click)
+        self.configure(cursor="hand2")
+
+    def _click(self, e):
+        if e.y <= self.t.px(self.TITLE_H):
+            self.folded = not self.folded
+            if self.on_fold:
+                self.on_fold(self.fold_name, self.folded)
+            self.refold()
+
+    def _paint_chev(self):
+        g = self.t.gfx
+        self._chev_photo = g.photo(g.icon("down" if self.folded else "up", g.px(16), TEXT_DIM))
+        self.itemconfigure(self._chev, image=self._chev_photo)
+
+    def _paint_bg(self, h):
+        g = self.t.gfx
+        self.configure(height=g.px(h))
+        self._photos["bg"] = g.photo(g.panel(g.px(INNER), g.px(h), 16, "#191c25", "#13151b", 0.09))
+        self.itemconfigure(self._bg, image=self._photos["bg"])
+
+
+class PotionsCard(Foldable, tk.Canvas):
+    """The potions on your quick-slot bar: each one's picture, how many are left, and how many came and went
+    this session (+ picked up, \u2212 used)."""
+
+    CELL_H, GAP, TOP = 46, 8, 36
+
+    def __init__(self, parent, theme, bg=INK, folded=False, on_fold=None):
+        self.t, self.rows = theme, []
+        g = theme.gfx
+        tk.Canvas.__init__(self, parent, width=g.px(INNER), height=g.px(80), bg=bg, highlightthickness=0, bd=0)
+        self._bg = self.create_image(0, 0, anchor="nw")
+        self.create_text(g.px(16), g.px(18), anchor="w", text="QUICK SLOT POTIONS", fill=TEXT_DIM, font=theme.font("semibold", 10))
+        self._empty = self.create_text(g.px(16), g.px(52), anchor="w", text="", fill=TEXT_DIM, font=theme.font("regular", 11))
+        self._cells, self._photos, self._icons, self._shape = [], {}, {}, None
+        self._setup_fold("potions", folded, on_fold)
+        self.refold()
+
+    def refold(self):
+        self._shape = None                          # (rebuilt at the next set)
+        self._paint_chev()
+        self.set(self.rows)
+
+    def _summary_text(self, rows):
+        used = sum(r["used"] for r in rows)
+        got = sum(r["gained"] for r in rows)
+        if not rows:
+            return ""
+        return f"{len(rows)} on the bar  \u00b7  \u2212{used:,} used" + (f"  \u00b7  +{got:,}" if got else "")
+
+    def _height(self, n):
+        rows = (n + 1) // 2
+        return self.TOP + (rows * (self.CELL_H + self.GAP) - self.GAP if rows else 32) + 14
+
+    def set(self, rows):
+        g, f = self.t.gfx, self.t.font
+        self.rows = rows
+        self.itemconfigure(self._summary, text=self._summary_text(rows) if self.folded else "this session")
+        shape = 0 if self.folded else len(rows)
+        if shape != self._shape:
+            self._shape = shape
+            self._paint_bg(self.TITLE_H if self.folded else self._height(shape))
+            for cell in self._cells:
+                for item in cell.values():
+                    self.delete(item)
+            self._cells = []
+            cw = (INNER - 32 - self.GAP) / 2
+            cell_bg = g.panel(g.px(cw), g.px(self.CELL_H), 12, "#12141a", "#101217", 0.07)
+            self._photos["cell"] = g.photo(cell_bg)
+            for i in range(shape):
+                x = g.px(16 + (i % 2) * (cw + self.GAP))
+                y = g.px(self.TOP + (i // 2) * (self.CELL_H + self.GAP))
+                self._cells.append({
+                    "bg": self.create_image(x, y, anchor="nw", image=self._photos["cell"]),
+                    "icon": self.create_image(x + g.px(7), y + g.px(self.CELL_H / 2), anchor="w"),
+                    "name": self.create_text(x + g.px(50), y + g.px(14), anchor="w", text="", fill=TEXT_DIM, font=f("semibold", 10)),
+                    "count": self.create_text(x + g.px(50), y + g.px(31), anchor="w", text="", fill=TEXT, font=f("extra", 15)),
+                    "delta": self.create_text(0, y + g.px(32), anchor="w", text="", font=f("extra", 11.5))})
+            self._icons = {}
+        self.itemconfigure(self._empty, text="" if rows or self.folded else "Put your potions on the quick-slot bar to see them here.")
+        cw = (INNER - 32 - self.GAP) / 2
+        for cell, r in zip(self._cells, rows):
+            self.itemconfigure(cell["name"], text=_cut(f("semibold", 10), r["name"], g.px(cw - 56)))
+            count = "\u2014" if r["count"] is None else f"{r['count']:,}"
+            self.itemconfigure(cell["count"], text=count)
+            d = r["delta"]
+            text = "0" if not d else (f"+{d:,}" if d > 0 else f"\u2212{abs(d):,}")
+            self.itemconfigure(cell["delta"], text=text, fill=GREEN if d > 0 else RED if d < 0 else TEXT_DIM)
+            box = self.bbox(cell["count"])
+            if box:
+                self.coords(cell["delta"], box[2] + g.px(7), self.coords(cell["count"])[1] + g.px(1))
+            key = (r["name"], id(r["icon"]))
+            if self._icons.get(id(cell["icon"])) != key:
+                self._icons[id(cell["icon"])] = key
+                self._photos[id(cell["icon"])] = g.photo(g.slot_tile(g.px(34), r["icon"]))
+                self.itemconfigure(cell["icon"], image=self._photos[id(cell["icon"])])
+
+
+class MobsCard(Foldable, tk.Canvas):
+    """The monsters that live on this map, with their levels. Each one's face is tinted by how hard it is for
+    you: orange above your level, green around it, grey well below."""
+
+    CHIP_H, GAP, TOP = 36, 8, 36
+
+    def __init__(self, parent, theme, bg=INK, folded=False, on_fold=None):
+        self.t = theme
+        g = theme.gfx
+        tk.Canvas.__init__(self, parent, width=g.px(INNER), height=g.px(84), bg=bg, highlightthickness=0, bd=0)
+        self._bg = self.create_image(0, 0, anchor="nw")
+        self.create_text(g.px(16), g.px(18), anchor="w", text="ON THIS MAP", fill=TEXT_DIM, font=theme.font("semibold", 10))
+        self._items, self._photos, self._last, self._args = [], {}, None, ((), None, False)
+        self._setup_fold("mobs", folded, on_fold)
+        self.refold()
+
+    def refold(self):
+        self._last = None
+        self._paint_chev()
+        self.set(*self._args)
+
+    @staticmethod
+    def tint(mob_level, you):
+        if not you:
+            return "#7cc46a"
+        if mob_level >= you + 3:
+            return "#ff9f5c"
+        if mob_level >= you - 6:
+            return "#7cc46a"
+        return "#7d8494"
+
+    def set(self, mobs, you, map_known):
+        key = (tuple(mobs), you, map_known)
+        self._args = (mobs, you, map_known)
+        if key == self._last:
+            return
+        self._last = key
+        g, f = self.t.gfx, self.t.font
+        for item in self._items:
+            self.delete(item)
+        self._items = []
+        if self.folded:
+            line = "  \u00b7  ".join(f"{n} {lv}" for n, lv in mobs) or ("no list" if map_known else "")
+            self.itemconfigure(self._summary, text=_cut(f("semibold", 10), line, g.px(INNER - 160)))
+            self._paint_bg(self.TITLE_H)
+            return
+        self.itemconfigure(self._summary, text=f"you: Lv {you}" if you else "")
+        x, y, right = 16, self.TOP, INNER - 16
+        if not mobs:
+            self._items.append(self.create_text(g.px(16), g.px(self.TOP + 14), anchor="w", fill=TEXT_DIM, font=f("regular", 11),
+                                                text="No monster list for this map." if map_known else "Waiting for the map name."))
+            y += 28
+        for i, (name, level) in enumerate(mobs):
+            nw = f("bold", 12).measure(name) / g.s
+            lw = f("semibold", 11).measure(f"Lv. {level}") / g.s
+            w = 6 + 24 + 8 + nw + 6 + lw + 12
+            if x + w > right and x > 16:
+                x, y = 16, y + self.CHIP_H + self.GAP
+            w = min(w, right - x)
+            key_bg = ("chip", round(w))
+            if key_bg not in self._photos:
+                self._photos[key_bg] = g.photo(g.panel(g.px(w), g.px(self.CHIP_H), 11, "#12141a", "#101217", 0.07))
+            color = self.tint(level, you)
+            if ("mob", color) not in self._photos:
+                self._photos[("mob", color)] = g.photo(g.mob_badge(g.px(24), color))
+            cy = g.px(y + self.CHIP_H / 2)
+            self._items += [self.create_image(g.px(x), g.px(y), anchor="nw", image=self._photos[key_bg]),
+                            self.create_image(g.px(x + 6), cy, anchor="w", image=self._photos[("mob", color)]),
+                            self.create_text(g.px(x + 38), cy, anchor="w", text=name, fill=TEXT, font=f("bold", 12)),
+                            self.create_text(g.px(x + 38 + nw + 6), cy, anchor="w", text=f"Lv. {level}", fill=TEXT_DIM,
+                                             font=f("semibold", 11))]
+            x += w + self.GAP
+            if i == len(mobs) - 1:
+                y += self.CHIP_H
+        self._paint_bg(y + 14)
+
+
 class Toggle(tk.Canvas):
     """A switch with a label, tied to a BooleanVar-like get/set."""
 
@@ -514,7 +822,9 @@ class Strip(tk.Frame):
         self._photos, self._gphotos, self._digits = {}, {}, []
         self._start = None
         self._m = dict(rate=None, pct=None, level=None, eta="", eta_time="", mesos="\u2014", net="", tiles={}, state="waiting", state_text="",
-                       no_reset=False)
+                       no_reset=False, pots=())
+        self.icons = {}                                       # potion name -> its picture (MainView keeps it up to date)
+        self._pot_items, self._pots_left = [], None
         x0, y0 = g.px(SIDE), g.px(self.top)
         self._card = c.create_image(x0, y0, anchor="nw")
         self._photos["card"] = g.photo(g.hero_panel(g.px(self.CW), g.px(self.card_h), 16))
@@ -628,14 +938,42 @@ class Strip(tk.Frame):
         c.coords(self._div[1], x, y0 + g.px(14), x, y0 + g.px(42))
         c.itemconfigure(self._eta, text=m["eta"])
         c.coords(self._eta, x + gap, y)
-        if c.bbox(self._eta)[2] > x0 + g.px(self.CW - 14):        # too long for the card: just the time
+        limit = self._pots_left if self._pots_left else x0 + g.px(self.CW - 14)
+        if c.bbox(self._eta)[2] > limit:                          # too long for the card: just the time
             c.itemconfigure(self._eta, text=m["eta_time"] or "")
         c.itemconfigure(self._nr, text="No Reset" if m["no_reset"] else "")
         if m["no_reset"]:                                         # after the level text, if there's room
             box = c.bbox(self._eta)
             c.coords(self._nr, (box[2] if box and c.itemcget(self._eta, "text") else x + gap) + g.px(10), y0 + g.px(31))
-            if c.bbox(self._nr)[2] > x0 + g.px(self.CW - 14):
+            if c.bbox(self._nr)[2] > limit:
                 c.itemconfigure(self._nr, text="")
+        if self._pots_left and c.bbox(self._eta) and c.bbox(self._eta)[2] > limit:
+            c.itemconfigure(self._eta, text="")
+
+    def _draw_pots(self):
+        """Bar: the potions on the quick-slot bar at the card's right end, each its picture and how many are left."""
+        g, c = self.t.gfx, self.canvas
+        for item in self._pot_items:
+            c.delete(item)
+        self._pot_items, self._photos_pots = [], []
+        pots = [p for p in self._m["pots"] if p[1] is not None][:BAR_POTS]
+        if not pots:
+            self._pots_left = None
+            return
+        x0, y0 = g.px(SIDE), g.px(self.top)
+        x = x0 + g.px(self.CW - 16)
+        cy = y0 + g.px(28)
+        font = self.t.font("extra", 12)
+        for name, count, _ in reversed(pots):
+            text = f"{count:,}"
+            x -= font.measure(text)
+            self._pot_items.append(c.create_text(x, cy, anchor="w", text=text, fill=TEXT, font=font))
+            x -= g.px(5 + 24)
+            photo = g.photo(g.slot_tile(g.px(24), self.icons.get(name), radius=7))
+            self._photos_pots.append(photo)
+            self._pot_items.append(c.create_image(x, cy, anchor="w", image=photo))
+            x -= g.px(12)
+        self._pots_left = x - g.px(4)
 
     def _paint(self, changed):
         g, m, c = self.t.gfx, self._m, self.canvas
@@ -662,8 +1000,10 @@ class Strip(tk.Frame):
             c.itemconfigure(self._eta, text=m["eta"])
             pct = m["pct"]
             c.itemconfigure(self._pct, text=f"{pct:.1f}%" if pct is not None else "")
+        if not wide and (everything or "pots" in changed):
+            self._draw_pots()
         if not wide and (everything or "rate" in changed or "mesos" in changed or "eta" in changed or "net" in changed
-                         or "no_reset" in changed):
+                         or "no_reset" in changed or "pots" in changed):
             self._flow()
         if everything or "pct" in changed:
             frac = round((m["pct"] or 0) / 100 * 500) / 500
@@ -726,28 +1066,35 @@ class MainView(tk.Frame):
         for b in (self.log_btn, self.compact_btn, self.settings_btn):
             b.pack(side="left", padx=(2, 0))
 
+        self.place = PlaceCard(self, theme, bg)
+        self.place.grid(row=1, column=0, padx=g.px(SIDE), pady=pad(0, 10))
+
         self.hero = Hero(self, theme, bg)
-        self.hero.grid(row=1, column=0, padx=g.px(SIDE), pady=pad(0, 10))
+        self.hero.grid(row=2, column=0, padx=g.px(SIDE), pady=pad(0, 10))
         self.hero.bind("<Double-Button-1>", lambda e: cb["compact"]())
 
         self.tiles_row = tk.Frame(self, bg=bg)
-        self.tiles_row.grid(row=2, column=0, padx=g.px(SIDE), pady=pad(0, 6), sticky="we")
-        tw = (INNER - 24) // 4
+        self.tiles_row.grid(row=3, column=0, padx=g.px(SIDE), pady=pad(0, 10), sticky="we")
+        tw = (INNER - 16) // 3
         self.tiles = {}
-        for i, name in enumerate(("Last 5 min", "Mesos / hr", "Net / hr", "Elapsed")):
+        for i, name in enumerate(("Last 5 min", "Elapsed", "Gained")):
             t = Tile(self.tiles_row, theme, name, tw, bg)
             t.grid(row=0, column=i, padx=(0 if i == 0 else g.px(8), 0))
             self.tiles[name] = t
 
-        self.more_btn = Button(self, theme, text="Details", icon="down", kind="ghost", width=INNER, height=30, radius=10,
-                               size=12, weight="semibold", command=self._toggle_details, bg=bg)
-        self.more_btn.grid(row=3, column=0, padx=g.px(SIDE), pady=pad(0, 4))
-        self.details_open = details
+        self.money = MoneyCard(self, theme, bg)
+        self.money.grid(row=4, column=0, padx=g.px(SIDE), pady=pad(0, 10))
+        folded = set(cb.get("folded") or ())
+        self.potions = PotionsCard(self, theme, bg, "potions" in folded, cb.get("fold"))
+        self.potions.grid(row=11, column=0, padx=g.px(SIDE), pady=pad(0, 10))
+        self.mobs = MobsCard(self, theme, bg, "mobs" in folded, cb.get("fold"))
+        self.mobs.grid(row=12, column=0, padx=g.px(SIDE), pady=pad(0, 10))
+        self._want = {self.potions: True, self.mobs: False}       # cards shown only when they have something to say
+        self.mobs.grid_remove()
+
+        # (the old Details list: its numbers now live in the cards above, so it's kept only for what still asks it)
+        self.details_open = False
         self.details = Details(self, theme, ("% / hr", "Gained", "Current", "Mesos", "Mesos / 5 min", "Potion cost", "Net mesos / hr", "Left out"), bg)
-        self.details.grid(row=4, column=0, padx=g.px(SIDE), pady=pad(0, 8))
-        if not details:
-            self.details.grid_remove()
-        self.more_btn.set(icon="up" if details else "down")
 
         controls = self.controls = tk.Frame(self, bg=bg)
         controls.grid(row=5, column=0, padx=g.px(SIDE - 8), pady=pad(0, 2), sticky="we")
@@ -774,37 +1121,56 @@ class MainView(tk.Frame):
                                radius=10, size=12, command=cb["best"], bg=bg)     # so both switches fit beside it)
         self.best_btn.grid(row=0, column=2, sticky="e")
         self.message = Message(self, theme, bg)
-        self.message.grid(row=7, column=0, padx=g.px(SIDE + 2), pady=pad(2, 14), sticky="we")
-        self.foot_widgets = [self.tiles_row, self.more_btn, self.details, self.reset_btn, self.menu_btn, foot]
+        self.message.grid(row=7, column=0, padx=g.px(SIDE + 2), pady=pad(2, 10), sticky="we")
+        self.foot_widgets = [self.place, self.tiles_row, self.money, self.potions, self.mobs, self.reset_btn, self.menu_btn, foot]
 
     # ---- showing things
     def show(self, **m):
         """rate, delta, spark, pct, eta (hero); tiles, details (dicts); state, state_text, message."""
-        hero = {k: m[k] for k in ("rate", "delta", "spark", "pct", "eta", "mesos", "net") if k in m}
+        hero = {k: m[k] for k in ("rate", "delta", "spark", "pct", "eta", "mesos", "net", "exp_line", "pct_hr") if k in m}
         if "spark" in hero:
             hero["spark"] = tuple(hero["spark"])
         if hero:
             self.hero.show(**hero)
         for name, value in (m.get("tiles") or {}).items():
-            self.tiles[name].set(value)
+            if name in self.tiles:
+                self.tiles[name].set(value)
+        if "place" in m:
+            name, region, party, mobs, level = m["place"]
+            self.place.set(name, region, party)
+            self.mobs.set(mobs, level, bool(name))
+            self._show_card(self.mobs, bool(name))
+        if "money" in m:
+            self.money.set(m["money"])
+        if "potions" in m:
+            self.potions.set(m["potions"])
+        if "potions_on" in m:
+            self._show_card(self.potions, m["potions_on"])
         for name, value in (m.get("details") or {}).items():
             self.details.set(name, value)
         if "state" in m:
             self.pill.set(m["state"], m.get("state_text", ""))
         if "message" in m:
             self.message.set(m["message"], self.t.px(INNER - 6))
+        if "potions" in m:
+            icons = {r["name"]: r["icon"] for r in m["potions"] if r.get("icon") is not None}
+            for st in self.strips.values():
+                st.icons = icons
+            self._icons = icons
+            m = dict(m, pots=tuple((r["name"], r["count"], id(r.get("icon"))) for r in m["potions"]))
         strip = {k: v for k, v in m.items() if k in STRIP_KEYS}
         if strip:
             self._last.update(strip)
             for st in self.strips.values():
                 st.show(**strip)
 
-    def _toggle_details(self):
-        self.details_open = not self.details_open
-        (self.details.grid if self.details_open else self.details.grid_remove)()
-        self.more_btn.set(icon="up" if self.details_open else "down")
-        if self.cb.get("details"):
-            self.cb["details"](self.details_open)
+    def _show_card(self, card, on):
+        """Shows or hides one of the cards that come and go (Potions, On this map), unless compact mode hides them all."""
+        if self._want.get(card) == on:
+            return
+        self._want[card] = on
+        if not self.compact:
+            (card.grid if on else card.grid_remove)()
 
     def set_start(self, text, icon, kind):
         """The Start/Pause button, here and on the sideways shapes."""
@@ -816,6 +1182,7 @@ class MainView(tk.Frame):
     def _strip(self, shape):
         if shape not in self.strips:
             st = self.strips[shape] = Strip(self, self.t, self.cb, shape, self["bg"])
+            st.icons = getattr(self, "_icons", {})
             st.show(**self._last)
             if getattr(self, "_start", None):
                 st.set_start(*self._start)
@@ -844,9 +1211,9 @@ class MainView(tk.Frame):
             w.grid()
         self.hero.set_compact(on)
         for w in self.foot_widgets:
-            if on:
+            if on or not self._want.get(w, True):
                 w.grid_remove()
-            elif w is not self.details or self.details_open:
+            else:
                 w.grid()
         self.start_btn.resize(INNER - 8 if on else INNER - 8 - 52 - 52)
         self.compact_btn.set(icon="grow" if on else "shrink")
