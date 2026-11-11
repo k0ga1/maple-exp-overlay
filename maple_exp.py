@@ -61,6 +61,7 @@ import mesos_v2
 import ocr
 import party_v3
 import potion_bar
+import loot_reader
 import potions
 import report
 import shadow
@@ -78,7 +79,7 @@ PLATFORM = create_platform()
 PLATFORM.setup_process()
 cv2.setNumThreads(1)
 
-VERSION = "0.9.16-beta.lucas3"
+VERSION = "0.9.16-beta.lucas4"
 MODIFIED_COPY = True        # a changed copy for one player: it never sends anything to mcwo.app (see docs/developers.md)
 TEST_BUILD_MARK = "-mactest"         # a Mac test build calls itself e.g. 0.9.16-mactest.1 and sends nothing
 WINDOW_TITLE = "Maple Classic Exp Overlay"    # the version is shown in Settings
@@ -142,13 +143,23 @@ MAX_COORD = 100_000        # a screen position or size in the settings; more is 
 DEFAULTS = {"gap_seconds": 15, "transparency": 0, "topmost": True,
             "check_updates": True, "skip_version": "", "ui_scale": 100, "compact": False, "hotkeys_on": True,
             "details": False, "compact_shape": "square", "seen_version": "",
-            "potions_on": True, "potion_prices": {}, "shadow_reader": True, "no_reset": False, "folded_cards": []}
+            "potions_on": True, "potion_prices": {}, "shadow_reader": True, "no_reset": False, "folded_cards": [],
+            "loot_on": True}
 SHAPE_LABELS = {"square": "Square", "wide": "Wide", "bar": "Bar"}
 SHAPE_BLURBS = {"square": "The narrow card: the big number, the level bar and Start/Pause.",
                 "wide": "Longer sideways: the level bar on top and four numbers in a row.",
                 "bar": "One thin strip with the main numbers and a slim level bar."}
 # What's new, shown once after updating to a version (plain words, newest changes only). A version with no entry shows nothing.
-WHATS_NEW = {"0.9.16-beta.lucas3": (
+WHATS_NEW = {"0.9.16-beta.lucas4": (
+    (None, None, (
+        ("head", "Your loot, counted"),
+        "While you track, the overlay reads the \"... x1 earned. (Etc)\" lines in the bottom-right corner and counts what "
+        "you pick up: equips, potions, scrolls and etc items.",
+        "The new Loot card lists them with what an NPC shop pays, the most valuable first. Items the game list doesn't "
+        "have (some are new in Classic World) show without a price.",
+        "Net mesos now adds your loot at NPC prices: mesos picked up + loot \u2212 potions.",
+        "A first version, made from one recording: tell me what it misses or gets wrong. It can be turned off in Settings.")),),
+    "0.9.16-beta.lucas3": (
     (None, None, (
         ("head", "A faster loot recording"),
         "Record loot messages now saves 8 pictures a second of just the lines' band, for 2.5 minutes: bursts of "
@@ -353,7 +364,7 @@ def load_config():
     for key in ("seen_version", "skip_version"):
         if len(cfg[key]) > 40:                          # (a version is a few characters)
             cfg[key] = ""
-    cfg["folded_cards"] = [c for c in cfg["folded_cards"] if c in ("potions", "mobs")]
+    cfg["folded_cards"] = [c for c in cfg["folded_cards"] if c in ("potions", "mobs", "loot")]
     if cfg["compact_shape"] not in SHAPES:
         cfg["compact_shape"] = "square"
     if cfg["ui_scale"] not in UI_SCALES:
@@ -3618,6 +3629,80 @@ class MesoTracker:
         return before[1]
 
 
+class LootWatcher:
+    """Reads what you pick up (loot_reader) from the game's message corner, several times a second, on its own thread
+    with its own screen grabber, while tracking runs on the game window. What it reads goes to the App's queue as
+    ("loot", [Pickup, ...]). Nothing is kept: each look is a small picture of the lines' band, read and dropped."""
+
+    EVERY = 0.125
+
+    def __init__(self, app):
+        self.app, self.error = app, None
+        self.names = None
+        self.lines_read = 0
+        threading.Thread(target=self._run, daemon=True).start()
+
+    def _active(self):
+        app = self.app
+        return (TESS is not None and app.cfg.get("loot_on") and app.session.on and app.reader.mode == "window"
+                and app.reader.last_rect)
+
+    def _run(self):
+        try:
+            self.names = loot_reader.ItemNames.load(ASSETS / "item_prices.json")
+        except Exception as e:
+            self.error = e
+            log_error("loading the item list (loot)", e)
+            return
+        feed = None
+        try:
+            with new_mss() as sct:
+                while not self.app.stop_evt.is_set():
+                    t0 = time.monotonic()
+                    try:
+                        if self._active():
+                            if feed is None:
+                                feed = loot_reader.LootFeed(self.names, lambda ims: TESS.read_lines(ims, chars=loot_reader.CHARS))
+                            x, y, w, h = self.app.reader.last_rect
+                            s = loot_reader.scale_for(h)
+                            bx, by, bw, bh = loot_reader.band_box(w, h, s)
+                            band = np.ascontiguousarray(np.asarray(sct.grab(
+                                {"left": x + bx, "top": y + by, "width": bw, "height": bh}))[..., :3])
+                            picks = feed.look(band, s, self.app.loot_mobs)
+                            self.lines_read = feed.read_count
+                            if picks:
+                                self.app.q.put(("loot", picks))
+                        else:
+                            feed = None                         # (a fresh start next time: the corner may be anything by then)
+                    except Exception as e:
+                        if not isinstance(e, ocr.TesseractError):
+                            log_error("reading the loot messages", e)
+                        feed = None
+                        time.sleep(2)
+                    time.sleep(max(0.0, self.EVERY - (time.monotonic() - t0)))
+        except Exception as e:
+            self.error = e
+            log_error("the loot reader stopped", e)
+
+
+class LootCount:
+    """What was picked up this session: {name: [quantity, tab, known]}, valued at what an NPC shop pays for each."""
+
+    def __init__(self):
+        self.items = {}
+
+    def reset(self):
+        self.items = {}
+
+    def add(self, pick):
+        row = self.items.setdefault(pick.name, [0, pick.tab, pick.known])
+        row[0] += max(1, pick.qty)
+
+    def value(self, price):
+        """Mesos the loot would fetch at an NPC shop, given price(name) (0 for what has no price)."""
+        return sum(q * (price(n) or 0) for n, (q, _, _) in self.items.items())
+
+
 class LootRecorder:
     """Records the game's message corner (bottom right: "You received EXP", "Cursed Doll x1 earned. (Etc)") for a few
     minutes into a zip in the loot_samples folder next to the program, so a reader for picked-up items can be built and tested on real play.
@@ -3695,6 +3780,7 @@ class Session:
     def __init__(self, gap):
         self.exp, self.meso = ExpTracker(), MesoTracker()
         self.potions = potions.PotionTracker()
+        self.loot = LootCount()
         self.gap = gap
         self.on = False             # Start was pressed (and Pause wasn't)
         self.waiting = None         # paused by itself: "idle" or "map"
@@ -3719,6 +3805,7 @@ class Session:
         self.exp.reset()
         self.meso.reset()
         self.potions.reset()
+        self.loot.reset()
         self.on, self.waiting, self.map, self.last_gain = False, None, None, None
 
     def _wait(self, why):
@@ -3749,6 +3836,7 @@ class Session:
                     t.new_session()         # a different map: its own numbers
                     self.meso.reset()
                     self.potions.reset()
+                    self.loot.reset()
                 self.map = self.here
             self.waiting = None
             self.last_gain = now
@@ -4794,6 +4882,8 @@ class App:
         self.potion_bar = potion_bar.NOT_SEEN    # what the potion bar showed at the last look: a potion_bar.PotionLook
         self.potion_counts = {}                  # item -> (its count on the bar at the last clear look, first slot index)
         self.loot_rec = None                     # a LootRecorder while one runs (and until its note has been shown)
+        self.loot_mobs = []                      # the monsters on the map you're on (the loot reader matches their drops first)
+        self.loot_watch = None                   # the LootWatcher (started with the worker)
         self.map_mobs = load_map_mobs()          # the monsters on each map (On this map card)
         self._forget_report_screen()             # (a bug report's game picture left from last time)
         self.in_town = False                # on a town map: nobody farms there, so nothing is logged
@@ -4882,6 +4972,7 @@ class App:
             self.status.set("Looking for the MapleStory window..." if mode == "window"
                             else "Using your selected area.")
 
+        self.loot_watch = LootWatcher(self)
         self._worker_thread = threading.Thread(target=self._worker, daemon=True)
         self._worker_thread.start()
         root.after(200, self._pump)
@@ -5588,6 +5679,12 @@ class App:
                command=self.open_potion_prices, bg=BG).pack(side="right")
         self._potions_on = potions_on
 
+        self._section(body, "Loot")
+        loot_on = tk.BooleanVar(value=bool(self.cfg.get("loot_on")))
+        self._switch(body, "Count what I pick up, at NPC prices", loot_on).pack(anchor="w")
+        tk.Label(body, text="Reads the \"... earned. (Etc)\" lines in the bottom-right corner while tracking, and adds "
+                            "the loot to net mesos.", wraplength=wrap, justify="left", **dim).pack(anchor="w", pady=(px(4), 0))
+
         self._section(body, "EXP bar without a number")
         level_line = tk.Frame(body, bg=BG)
         level_line.pack(fill="x")
@@ -5628,6 +5725,7 @@ class App:
             self.cfg["topmost"] = bool(topmost.get())
             self.cfg["check_updates"] = bool(updates.get())
             self.cfg["potions_on"] = bool(potions_on.get())
+            self.cfg["loot_on"] = bool(loot_on.get())
             if bool(no_reset.get()) != self.cfg["no_reset"]:
                 self.set_no_reset(no_reset.get())
             if bool(sharing.get()) != bool(self.cfg.get("share_runs")):
@@ -5644,7 +5742,7 @@ class App:
                 self.root.after(60, self._reopen_settings)        # (drawn again at the new size)
             save_config(self.cfg)
 
-        for var in (gap, transparency, topmost, updates, sharing, health_on, size, potions_on, no_reset):
+        for var in (gap, transparency, topmost, updates, sharing, health_on, size, potions_on, no_reset, loot_on):
             var.trace_add("write", apply)
         self._hotkey_settings(body)
         buttons = tk.Frame(body, bg=BG)
@@ -6261,6 +6359,8 @@ class App:
                     self._health_done(*payload)
                 elif kind == "report_sent":
                     self._report_done(*payload)
+                elif kind == "loot":
+                    self._loot_in(payload)
                 else:
                     self._handle(payload)
         except queue.Empty:
@@ -6591,7 +6691,8 @@ class App:
         if gross is None:
             return dash, None
         cost = self.session.potions.cost(prices.mapping())
-        return fmt_num(gross - cost / el * 3600), None
+        loot = self.session.loot.value(self._loot_price) if self.cfg.get("loot_on") else 0
+        return fmt_num(gross + (loot - cost) / el * 3600), None
 
     def _money_card(self, el, net):
         """The Mesos card: {title, net_label, net, gross, cost_hr, cost, left_out, wallet, split, note, hint}. split is
@@ -6614,27 +6715,32 @@ class App:
         common = {"cost": self._potion_cost_text(time.monotonic()),
                   "left_out": (f"+{fmt_short(m.left_out[0])} / -{fmt_short(m.left_out[1])}" if any(m.left_out) else "\u2014"),
                   "wallet": fmt_num(m.value) if m.value is not None else "\u2014", "note": note}
+        loot = self.session.loot.value(self._loot_price) if self.cfg.get("loot_on") else 0
         hourly = el >= MONEY_HOURLY_AFTER and m.per_hour(el) is not None
         if hourly:
             gross = m.per_hour(el)
             spent = cost / el * 3600 if cost is not None and el else None
+            loot_shown = loot / el * 3600 if el else 0
             out_net = net
         else:
             gross = m.gained if m.value is not None and m.start is not None else None
             spent = cost
-            out_net = fmt_num(gross - (spent or 0)) if gross is not None and self.cfg["potions_on"] else "\u2014"
+            loot_shown = loot
+            out_net = fmt_num(gross + loot_shown - (spent or 0)) if gross is not None and self.cfg["potions_on"] else "\u2014"
         split = None
-        if gross is not None and spent is not None and gross > 0:
-            split = (max(0.0, gross - spent), min(spent, gross))
-        elif gross is not None and spent:
+        earned = gross + loot_shown if gross is not None else None
+        if earned is not None and spent is not None and earned > 0:
+            split = (max(0.0, earned - spent), min(spent, earned))
+        elif earned is not None and spent:
             split = (0.0, spent)
         hint = None
         if not hourly:
             left = max(0, int(MONEY_HOURLY_AFTER - el))
             hint = f"per hour in {left // 60 + (1 if left % 60 else 0)} min" if left else "per hour soon"
-        return {**common, "title": "MESOS / HOUR" if hourly else "MESOS THIS SESSION",
+        return {**common, "title": ("MESOS + LOOT / HOUR" if hourly else "MESOS + LOOT THIS SESSION") if loot else
+                ("MESOS / HOUR" if hourly else "MESOS THIS SESSION"),
                 "net_label": "Net / hr" if hourly else "Net so far", "net": out_net,
-                "gross": fmt_num(gross) if gross is not None else "\u2014",
+                "gross": fmt_num(gross) if gross is not None else "\u2014", "loot": fmt_num(loot_shown) if loot_shown else "",
                 "cost_hr": fmt_num(spent) if spent else "0", "split": split, "hint": hint}
 
     def _potion_cost_text(self, now):
@@ -6658,6 +6764,47 @@ class App:
         if not hint:
             return cost
         return f"{cost}  ·  {hint}" if cost != "0" else hint
+
+    def _item_names(self):
+        """The game's item list (NPC prices), loaded once."""
+        if getattr(self, "_items", None) is None:
+            try:
+                self._items = loot_reader.ItemNames.load(ASSETS / "item_prices.json")
+            except Exception as e:
+                log_error("loading the item list (loot)", e)
+                self._items = loot_reader.ItemNames([], {})
+        return self._items
+
+    def _loot_price(self, name):
+        """What an NPC shop pays for one (your own price if you set one), or 0."""
+        own = (self.cfg.get("loot_prices") or {}).get(name)
+        return own if isinstance(own, int) and own >= 0 else self._item_names().price(name)
+
+    def _loot_in(self, picks):
+        """Items read as picked up: counted while tracking runs (in town or paused, nothing counts)."""
+        if not self.tracker.running:
+            return
+        for p in picks:
+            self.session.loot.add(p)
+
+    def _loot_card(self):
+        """(rows, total, note) for the Loot card, or None when loot reading is off."""
+        if not self.cfg.get("loot_on"):
+            return None
+        rows = []
+        for name, (qty, tab, known) in self.session.loot.items.items():
+            price = self._loot_price(name)
+            rows.append((qty * price if price else -1, name, qty, fmt_num(qty * price) if price else ""))
+        rows.sort(key=lambda r: (-r[0], r[1]))
+        total = fmt_num(self.session.loot.value(self._loot_price))
+        note = None
+        if TESS is None:
+            note = "Loot needs Tesseract (it comes with the download)."
+        elif self.reader.mode != "window":
+            note = "Loot is read only when following the game window."
+        elif not self.tracker.running:
+            note = "Counts what you pick up while tracking."
+        return [(n, q, v) for _, n, q, v in rows], total, note or ""
 
     def _card_folded(self, name, folded):
         """A card (Potions, On this map) folded to one line or opened again: kept for next time."""
@@ -6699,8 +6846,9 @@ class App:
         """The map strip and the On this map card: (map name, region, party label, [(monster, level), ...])."""
         name = self.map_name
         info = self.map_mobs.get(name) if name else None
-        mobs = [(str(m[0]), int(m[1])) for m in (info or {}).get("mobs", [])[:MOBS_CARD_MAX]
-                if isinstance(m, (list, tuple)) and len(m) == 2]
+        every = [(str(m[0]), int(m[1])) for m in (info or {}).get("mobs", []) if isinstance(m, (list, tuple)) and len(m) == 2]
+        self.loot_mobs = [m for m, _ in every]
+        mobs = every[:MOBS_CARD_MAX]
         return name, (info or {}).get("region") or "", party_label(self.party), mobs
 
     def _prices(self):
@@ -6741,6 +6889,7 @@ class App:
             money=self._money_card(el, net),
             potions=self._potion_cards(),
             potions_on=bool(self.cfg["potions_on"]),
+            loot=self._loot_card(),
             place=self._map_card() + (level or None,),
             details={"% / hr": f"{rate / t.req * 100:.2f}%" if rate and t.req else "\u2014",
                      "Gained": est(f"{fmt_short(t.gained)}{f'  (+{t.levels} lvl)' if t.levels else ''}"),

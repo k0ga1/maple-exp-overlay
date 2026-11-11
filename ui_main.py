@@ -501,7 +501,7 @@ class MoneyCard(tk.Canvas):
     """Mesos per hour: the net (what you really make) big and green, what you picked up and what the potions
     cost beside it, a bar that shows how much of it the potions eat, and the session's totals under it."""
 
-    H = 136
+    H = 150
 
     def __init__(self, parent, theme, bg=INK):
         self.t = theme
@@ -513,12 +513,13 @@ class MoneyCard(tk.Canvas):
         self._title = self.create_text(g.px(16), g.px(18), anchor="w", text="MESOS / HOUR", fill=TEXT_DIM, font=theme.font("semibold", 10))
         self._wallet = self.create_text(R, g.px(18), anchor="e", text="", fill=TEXT_DIM, font=theme.font("semibold", 10))
         self._net_label = self.create_text(g.px(16), g.px(40), anchor="w", text="Net", fill=TEXT_DIM, font=theme.font("semibold", 10))
-        self._net = self.create_text(g.px(15), g.px(62), anchor="w", text="\u2014", fill=GREEN, font=theme.font("extra", 26))
-        self._gross = self.create_text(R, g.px(46), anchor="e", text="", fill=TEXT, font=theme.font("bold", 12))
-        self._cost = self.create_text(R, g.px(68), anchor="e", text="", fill=RED, font=theme.font("bold", 12))
-        self._bar = self.create_image(g.px(16), g.px(92), anchor="nw")
-        self._left = self.create_text(g.px(16), g.px(118), anchor="w", text="", fill=TEXT_DIM, font=theme.font("semibold", 10))
-        self._right = self.create_text(R, g.px(118), anchor="e", text="", fill=TEXT_DIM, font=theme.font("semibold", 10))
+        self._net = self.create_text(g.px(15), g.px(66), anchor="w", text="\u2014", fill=GREEN, font=theme.font("extra", 26))
+        self._gross = self.create_text(R, g.px(42), anchor="e", text="", fill=TEXT, font=theme.font("bold", 12))
+        self._loot = self.create_text(R, g.px(62), anchor="e", text="", fill=GREEN, font=theme.font("bold", 12))
+        self._cost = self.create_text(R, g.px(82), anchor="e", text="", fill=RED, font=theme.font("bold", 12))
+        self._bar = self.create_image(g.px(16), g.px(106), anchor="nw")
+        self._left = self.create_text(g.px(16), g.px(132), anchor="w", text="", fill=TEXT_DIM, font=theme.font("semibold", 10))
+        self._right = self.create_text(R, g.px(132), anchor="e", text="", fill=TEXT_DIM, font=theme.font("semibold", 10))
         self._last = None
 
     def set(self, d):
@@ -535,7 +536,10 @@ class MoneyCard(tk.Canvas):
         if negative:
             net = "\u2212" + net[1:]
         self.itemconfigure(self._net, text=net, fill=TEXT_FAINT if net == "\u2014" else RED if negative else GREEN)
-        self.itemconfigure(self._gross, text=f"{d.get('gross', DASH)}  picked up")
+        self.itemconfigure(self._gross, text=f"{d.get('gross', DASH)}  mesos")
+        loot = d.get("loot")
+        self.itemconfigure(self._loot, text=f"+{loot}  loot" if loot not in (None, "", "0") else "",
+                           )
         cost_hr = d.get("cost_hr") or "0"
         minus = "" if cost_hr == "0" else "\u2212"
         self.itemconfigure(self._cost, text=f"{minus}{cost_hr}  potions",
@@ -544,6 +548,10 @@ class MoneyCard(tk.Canvas):
         w = g.px(INNER - 32)
         parts = split if split else (0, 0)
         self._photos["bar"] = g.photo(g.split_bar(w, g.px(8), parts, (GREEN, "#ff7a5c")))
+        if not loot or loot == "0":                       # (no loot line: the potions line moves up into its place)
+            self.coords(self._cost, g.px(INNER - 16), g.px(62))
+        else:
+            self.coords(self._cost, g.px(INNER - 16), g.px(82))
         self.itemconfigure(self._bar, image=self._photos["bar"])
         half = g.px((INNER - 40) / 2)
         if d.get("note"):
@@ -664,6 +672,72 @@ class PotionsCard(Foldable, tk.Canvas):
                 self._icons[id(cell["icon"])] = key
                 self._photos[id(cell["icon"])] = g.photo(g.slot_tile(g.px(34), r["icon"]))
                 self.itemconfigure(cell["icon"], image=self._photos[id(cell["icon"])])
+
+
+class LootCard(Foldable, tk.Canvas):
+    """What you picked up this session (read from the game's "... earned." lines), each item with how many and what an
+    NPC shop pays for them, the most valuable first. Items the game list doesn't have show without a price."""
+
+    ROW, TOP, SHOW = 24, 38, 8
+
+    def __init__(self, parent, theme, bg=INK, folded=False, on_fold=None):
+        self.t = theme
+        g = theme.gfx
+        tk.Canvas.__init__(self, parent, width=g.px(INNER), height=g.px(80), bg=bg, highlightthickness=0, bd=0)
+        self._bg = self.create_image(0, 0, anchor="nw")
+        self.create_text(g.px(16), g.px(18), anchor="w", text="LOOT", fill=TEXT_DIM, font=theme.font("semibold", 10))
+        self._items, self._photos, self._last, self._args = [], {}, None, ([], "", "")
+        self._setup_fold("loot", folded, on_fold)
+        self.refold()
+
+    def refold(self):
+        self._last = None
+        self._paint_chev()
+        self.set(*self._args)
+
+    def set(self, rows, total, note=""):
+        """rows: [(name, quantity, value text)], the most valuable first; total: the value of it all, as text."""
+        key = (tuple(rows), total, note, self.folded)
+        self._args = (rows, total, note)
+        if key == self._last:
+            return
+        self._last = key
+        g, f = self.t.gfx, self.t.font
+        for item in self._items:
+            self.delete(item)
+        self._items = []
+        count = sum(q for _, q, _ in rows)
+        summary = f"{count:,} picked up  \u00b7  {total}" if rows else ""
+        if self.folded:
+            self.itemconfigure(self._summary, text=summary)
+            self._paint_bg(self.TITLE_H)
+            return
+        self.itemconfigure(self._summary, text=f"worth {total} at NPC" if rows else "this session")
+        y = self.TOP
+        if not rows:
+            self._items.append(self.create_text(g.px(16), g.px(y + 10), anchor="w", fill=TEXT_DIM, font=f("regular", 11),
+                                                text=note or "Nothing picked up yet."))
+            y += 26
+        shown = rows[:self.SHOW]
+        for name, qty, value in shown:
+            cy = g.px(y + self.ROW / 2)
+            vtxt = value if value else "no price"
+            vfont = f("bold", 11.5)
+            vx = g.px(INNER - 16)
+            self._items.append(self.create_text(vx, cy, anchor="e", text=vtxt, fill=TEXT if value else TEXT_FAINT, font=vfont))
+            room = g.px(INNER - 16 - 16 - 50) - vfont.measure(vtxt)
+            self._items.append(self.create_text(g.px(16), cy, anchor="w", fill=TEXT, font=f("semibold", 11),
+                                                text=_cut(f("semibold", 11), name, room)))
+            nb = self.bbox(self._items[-1])
+            self._items.append(self.create_text((nb[2] if nb else g.px(120)) + g.px(6), cy, anchor="w", fill=TEXT_DIM,
+                                                font=f("semibold", 10.5), text=f"\u00d7{qty:,}"))
+            y += self.ROW
+        if len(rows) > self.SHOW:
+            more = len(rows) - self.SHOW
+            self._items.append(self.create_text(g.px(16), g.px(y + 10), anchor="w", fill=TEXT_DIM, font=f("regular", 10.5),
+                                                text=f"+{more} more item{'s' if more > 1 else ''}"))
+            y += 22
+        self._paint_bg(y + 10)
 
 
 class MobsCard(Foldable, tk.Canvas):
@@ -1087,9 +1161,12 @@ class MainView(tk.Frame):
         folded = set(cb.get("folded") or ())
         self.potions = PotionsCard(self, theme, bg, "potions" in folded, cb.get("fold"))
         self.potions.grid(row=11, column=0, padx=g.px(SIDE), pady=pad(0, 10))
+        self.loot = LootCard(self, theme, bg, "loot" in folded, cb.get("fold"))
+        self.loot.grid(row=11, column=0, padx=g.px(SIDE), pady=pad(0, 10))
+        self.potions.grid(row=12, column=0, padx=g.px(SIDE), pady=pad(0, 10))
         self.mobs = MobsCard(self, theme, bg, "mobs" in folded, cb.get("fold"))
-        self.mobs.grid(row=12, column=0, padx=g.px(SIDE), pady=pad(0, 10))
-        self._want = {self.potions: True, self.mobs: False}       # cards shown only when they have something to say
+        self.mobs.grid(row=13, column=0, padx=g.px(SIDE), pady=pad(0, 10))
+        self._want = {self.potions: True, self.mobs: False, self.loot: True}       # cards shown only when they have something to say
         self.mobs.grid_remove()
 
         # (the old Details list: its numbers now live in the cards above, so it's kept only for what still asks it)
@@ -1122,7 +1199,8 @@ class MainView(tk.Frame):
         self.best_btn.grid(row=0, column=2, sticky="e")
         self.message = Message(self, theme, bg)
         self.message.grid(row=7, column=0, padx=g.px(SIDE + 2), pady=pad(2, 10), sticky="we")
-        self.foot_widgets = [self.place, self.tiles_row, self.money, self.potions, self.mobs, self.reset_btn, self.menu_btn, foot]
+        self.foot_widgets = [self.place, self.tiles_row, self.money, self.loot, self.potions, self.mobs, self.reset_btn,
+                             self.menu_btn, foot]
 
     # ---- showing things
     def show(self, **m):
@@ -1146,6 +1224,12 @@ class MainView(tk.Frame):
             self.potions.set(m["potions"])
         if "potions_on" in m:
             self._show_card(self.potions, m["potions_on"])
+        if "loot" in m:
+            if m["loot"] is None:
+                self._show_card(self.loot, False)
+            else:
+                self._show_card(self.loot, True)
+                self.loot.set(*m["loot"])
         for name, value in (m.get("details") or {}).items():
             self.details.set(name, value)
         if "state" in m:
