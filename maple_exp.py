@@ -39,6 +39,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import webbrowser
+import zipfile
 from collections import Counter, deque, namedtuple
 from datetime import date
 from difflib import SequenceMatcher
@@ -77,7 +78,7 @@ PLATFORM = create_platform()
 PLATFORM.setup_process()
 cv2.setNumThreads(1)
 
-VERSION = "0.9.16-beta.lucas1"
+VERSION = "0.9.16-beta.lucas2"
 MODIFIED_COPY = True        # a changed copy for one player: it never sends anything to mcwo.app (see docs/developers.md)
 TEST_BUILD_MARK = "-mactest"         # a Mac test build calls itself e.g. 0.9.16-mactest.1 and sends nothing
 WINDOW_TITLE = "Maple Classic Exp Overlay"    # the version is shown in Settings
@@ -147,7 +148,14 @@ SHAPE_BLURBS = {"square": "The narrow card: the big number, the level bar and St
                 "wide": "Longer sideways: the level bar on top and four numbers in a row.",
                 "bar": "One thin strip with the main numbers and a slim level bar."}
 # What's new, shown once after updating to a version (plain words, newest changes only). A version with no entry shows nothing.
-WHATS_NEW = {"0.9.16-beta.lucas1": (
+WHATS_NEW = {"0.9.16-beta.lucas2": (
+    (None, None, (
+        ("head", "Getting ready to count your loot"),
+        "The ... menu has Record loot messages: for 4 minutes it saves pictures of the game's bottom-right corner, where "
+        "\"... earned. (Etc)\" shows up, into the loot_samples folder. They stay on this PC and are used to build the "
+        "reader that will value your drops at NPC prices.",
+        "The Mesos card shows this session's totals for the first 5 minutes, then per hour.")),),
+    "0.9.16-beta.lucas1": (
     (None, None, (
         ("head", "Your own copy"),
         "A changed copy of the overlay, made for you. It never sends anything to mcwo.app: no shared runs, no health "
@@ -3605,6 +3613,67 @@ class MesoTracker:
         return before[1]
 
 
+class LootRecorder:
+    """Records the game's message corner (bottom right: "You received EXP", "Cursed Doll x1 earned. (Etc)") for a few
+    minutes into a zip in the data folder, so a reader for picked-up items can be built and tested on real play.
+    Its own thread and its own screen grabber (mss can't be shared between threads). Pictures of the game only, kept
+    on this PC: nothing is sent anywhere. Each frame is saved only when the corner changed, named by its time in ms."""
+
+    SECONDS, FPS, MAX_BYTES = 240, 3, 330_000_000
+    REGION = (0.64, 0.48, 1.0, 0.95)        # (left, top, right, bottom) of the game window, as fractions
+
+    def __init__(self, get_rect, folder, meta):
+        self.get_rect, self.folder, self.meta = get_rect, Path(folder), dict(meta)
+        self.started = time.monotonic()
+        self.stopped, self.done, self.error = False, False, None
+        self.frames, self.bytes, self.path = 0, 0, None
+        threading.Thread(target=self._run, daemon=True).start()
+
+    def left(self):
+        return max(0, int(self.SECONDS - (time.monotonic() - self.started)))
+
+    def stop(self):
+        self.stopped = True
+
+    def _box(self, rect):
+        x, y, w, h = rect
+        l, t, r, b = self.REGION
+        return {"left": int(x + w * l), "top": int(y + h * t), "width": max(1, int(w * (r - l))), "height": max(1, int(h * (b - t)))}
+
+    def _run(self):
+        try:
+            self.folder.mkdir(parents=True, exist_ok=True)
+            self.path = self.folder / time.strftime("loot_%Y%m%d_%H%M%S.zip")
+            prev, frames = None, []
+            with new_mss() as sct, zipfile.ZipFile(self.path, "w", zipfile.ZIP_STORED) as z:
+                full_done = False
+                while not self.stopped and self.left() > 0 and self.bytes < self.MAX_BYTES:
+                    t0 = time.monotonic()
+                    rect = self.get_rect()
+                    if rect and rect[2] > 100 and rect[3] > 100:
+                        if not full_done:                   # (one picture of the whole window, to see where things are)
+                            x, y, w, h = rect
+                            full = np.asarray(sct.grab({"left": x, "top": y, "width": w, "height": h}))[..., :3]
+                            z.writestr("full.png", cv2.imencode(".png", full)[1].tobytes())
+                            full_done = True
+                        box = self._box(rect)
+                        img = np.ascontiguousarray(np.asarray(sct.grab(box))[..., :3])
+                        if prev is None or prev.shape != img.shape or not np.array_equal(prev, img):
+                            data = cv2.imencode(".png", img)[1].tobytes()
+                            ms = int((t0 - self.started) * 1000)
+                            z.writestr(f"f{ms:07d}.png", data)
+                            frames.append({"ms": ms, "box": box, "rect": list(rect)})
+                            self.frames, self.bytes = self.frames + 1, self.bytes + len(data)
+                            prev = img
+                    time.sleep(max(0.0, 1 / self.FPS - (time.monotonic() - t0)))
+                z.writestr("meta.json", json.dumps({**self.meta, "version": VERSION, "fps": self.FPS, "region": self.REGION,
+                                                    "frames": frames}, indent=1))
+        except Exception as e:
+            self.error = e
+            log_error("recording loot messages", e)
+        self.done = True
+
+
 class Session:
     """What's on screen: EXP and mesos since Start, and when tracking pauses by itself.
 
@@ -4719,6 +4788,7 @@ class App:
         self.map_name = None
         self.potion_bar = potion_bar.NOT_SEEN    # what the potion bar showed at the last look: a potion_bar.PotionLook
         self.potion_counts = {}                  # item -> (its count on the bar at the last clear look, first slot index)
+        self.loot_rec = None                     # a LootRecorder while one runs (and until its note has been shown)
         self.map_mobs = load_map_mobs()          # the monsters on each map (On this map card)
         self._forget_report_screen()             # (a bug report's game picture left from last time)
         self.in_town = False                # on a town map: nobody farms there, so nothing is logged
@@ -4849,7 +4919,43 @@ class App:
     def _open_menu(self, anchor):
         PopupMenu(self.theme, anchor, [
             ("Follow the game" if self.reader.mode == "region" else "Select area", None, self.toggle_area),
-            ("View capture", None, self.view_capture)])
+            ("View capture", None, self.view_capture),
+            ("Stop recording loot" if self.loot_rec and not self.loot_rec.done else "Record loot messages", None,
+             self.toggle_loot_rec)])
+
+    def toggle_loot_rec(self):
+        """Starts or stops recording the message corner (LootRecorder), for building the loot reader."""
+        rec = self.loot_rec
+        if rec and not rec.done:
+            rec.stop()
+            return
+        if not messagebox.askokcancel(
+                "Record loot messages",
+                f"For the next {LootRecorder.SECONDS // 60} minutes the overlay saves pictures of the bottom right of the "
+                "game (where \"You received EXP\" and \"... earned. (Etc)\" show up), plus one picture of the whole game "
+                "window, into a zip in the data folder.\n\nPlay normally and pick up your drops. Solo and in a party both "
+                "help. Nothing is sent anywhere.\n\nYou can stop it any time in the ... menu.", parent=self.root):
+            return
+        meta = {"map": self.map_name, "party": self.party, "level": self.level,
+                "filter": getattr(self.reader, "filter_state", None), "started": time.strftime("%Y-%m-%d %H:%M:%S")}
+        self.loot_rec = LootRecorder(lambda: self.reader.last_rect, DATA_DIR / "loot_samples", meta)
+
+    def _loot_rec_note(self):
+        """The status line's note about a loot recording, or None."""
+        rec = self.loot_rec
+        if not rec:
+            return None
+        if not rec.done:
+            m, sec = divmod(rec.left(), 60)
+            return f"Recording loot messages: {m}:{sec:02d} left ({rec.frames} pictures). Stop it in the ... menu."
+        if not hasattr(rec, "shown_at"):
+            rec.shown_at = time.monotonic()
+        if time.monotonic() - rec.shown_at > 60:
+            self.loot_rec = None
+            return None
+        if rec.error:
+            return "The loot recording stopped with an error (see errors.log)."
+        return f"Loot recording saved: {rec.path.name} ({rec.frames} pictures), in the loot_samples folder."
 
     def _logging_clicked(self, on):
         if self.skip_log == on:                           # the switch and the state disagree: flip
@@ -6257,6 +6363,9 @@ class App:
                     or self._net(self.tracker.elapsed())[1])
         if left_out:
             status += f"\n{left_out}"
+        rec_note = self._loot_rec_note()
+        if rec_note:
+            status += f"\n{rec_note}"
         self.status.set(status)
         self.recent.add(status)
         self.level = level_for_req(t.req) or self.level
