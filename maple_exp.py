@@ -152,7 +152,7 @@ WHATS_NEW = {"0.9.16-beta.lucas2": (
     (None, None, (
         ("head", "Getting ready to count your loot"),
         "The ... menu has Record loot messages: for 4 minutes it saves pictures of the game's bottom-right corner, where "
-        "\"... earned. (Etc)\" shows up, into the loot_samples folder. They stay on this PC and are used to build the "
+        "\"... earned. (Etc)\" shows up, into the loot_samples folder next to the program. They stay on this PC and are used to build the "
         "reader that will value your drops at NPC prices.",
         "The Mesos card shows this session's totals for the first 5 minutes, then per hour.")),),
     "0.9.16-beta.lucas1": (
@@ -3615,7 +3615,7 @@ class MesoTracker:
 
 class LootRecorder:
     """Records the game's message corner (bottom right: "You received EXP", "Cursed Doll x1 earned. (Etc)") for a few
-    minutes into a zip in the data folder, so a reader for picked-up items can be built and tested on real play.
+    minutes into a zip in the loot_samples folder next to the program, so a reader for picked-up items can be built and tested on real play.
     Its own thread and its own screen grabber (mss can't be shared between threads). Pictures of the game only, kept
     on this PC: nothing is sent anywhere. Each frame is saved only when the corner changed, named by its time in ms."""
 
@@ -4933,12 +4933,13 @@ class App:
                 "Record loot messages",
                 f"For the next {LootRecorder.SECONDS // 60} minutes the overlay saves pictures of the bottom right of the "
                 "game (where \"You received EXP\" and \"... earned. (Etc)\" show up), plus one picture of the whole game "
-                "window, into a zip in the data folder.\n\nPlay normally and pick up your drops. Solo and in a party both "
+                "window, into a zip in the loot_samples folder next to the program.\n\nPlay normally and pick up your drops. Solo and in a party both "
                 "help. Nothing is sent anywhere.\n\nYou can stop it any time in the ... menu.", parent=self.root):
             return
         meta = {"map": self.map_name, "party": self.party, "level": self.level,
                 "filter": getattr(self.reader, "filter_state", None), "started": time.strftime("%Y-%m-%d %H:%M:%S")}
-        self.loot_rec = LootRecorder(lambda: self.reader.last_rect, DATA_DIR / "loot_samples", meta)
+        # (beside the program, not in the data folder: this copy's folder is the one shared for building the reader)
+        self.loot_rec = LootRecorder(lambda: self.reader.last_rect, HOME_DIR / "loot_samples", meta)
 
     def _loot_rec_note(self):
         """The status line's note about a loot recording, or None."""
@@ -4955,7 +4956,7 @@ class App:
             return None
         if rec.error:
             return "The loot recording stopped with an error (see errors.log)."
-        return f"Loot recording saved: {rec.path.name} ({rec.frames} pictures), in the loot_samples folder."
+        return f"Loot recording saved: {rec.path.name} ({rec.frames} pictures), in the loot_samples folder next to the program."
 
     def _logging_clicked(self, on):
         if self.skip_log == on:                           # the switch and the state disagree: flip

@@ -31,3 +31,4 @@ node_modules/
 # One-off files made from the live data (see server/tools/)
 /server/tools/maps-live.json
 /server/tools/cleanup-maps.sql
+loot_samples/
