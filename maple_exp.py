@@ -78,7 +78,7 @@ PLATFORM = create_platform()
 PLATFORM.setup_process()
 cv2.setNumThreads(1)
 
-VERSION = "0.9.16-beta.lucas2"
+VERSION = "0.9.16-beta.lucas3"
 MODIFIED_COPY = True        # a changed copy for one player: it never sends anything to mcwo.app (see docs/developers.md)
 TEST_BUILD_MARK = "-mactest"         # a Mac test build calls itself e.g. 0.9.16-mactest.1 and sends nothing
 WINDOW_TITLE = "Maple Classic Exp Overlay"    # the version is shown in Settings
@@ -148,7 +148,12 @@ SHAPE_BLURBS = {"square": "The narrow card: the big number, the level bar and St
                 "wide": "Longer sideways: the level bar on top and four numbers in a row.",
                 "bar": "One thin strip with the main numbers and a slim level bar."}
 # What's new, shown once after updating to a version (plain words, newest changes only). A version with no entry shows nothing.
-WHATS_NEW = {"0.9.16-beta.lucas2": (
+WHATS_NEW = {"0.9.16-beta.lucas3": (
+    (None, None, (
+        ("head", "A faster loot recording"),
+        "Record loot messages now saves 8 pictures a second of just the lines' band, for 2.5 minutes: bursts of "
+        "pick-ups come faster than the first recording could see.",)),),
+    "0.9.16-beta.lucas2": (
     (None, None, (
         ("head", "Getting ready to count your loot"),
         "The ... menu has Record loot messages: for 4 minutes it saves pictures of the game's bottom-right corner, where "
@@ -3619,8 +3624,8 @@ class LootRecorder:
     Its own thread and its own screen grabber (mss can't be shared between threads). Pictures of the game only, kept
     on this PC: nothing is sent anywhere. Each frame is saved only when the corner changed, named by its time in ms."""
 
-    SECONDS, FPS, MAX_BYTES = 240, 3, 330_000_000
-    REGION = (0.64, 0.48, 1.0, 0.95)        # (left, top, right, bottom) of the game window, as fractions
+    SECONDS, FPS, MAX_BYTES = 150, 8, 330_000_000
+    REGION = (0.74, 0.62, 1.0, 0.84)        # (left, top, right, bottom) of the game window, as fractions: the lines' band
 
     def __init__(self, get_rect, folder, meta):
         self.get_rect, self.folder, self.meta = get_rect, Path(folder), dict(meta)
